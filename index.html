@@ -69,26 +69,51 @@ button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
 
 #sum{z-index:60}
 .scard{width:min(440px,100%);box-sizing:border-box;padding:22px;display:grid;gap:16px}
-.scard h2,.jcard h2{margin:0;font-family:var(--px);font-weight:400;font-size:14px;color:var(--gold)}
+.scard h2{margin:0;font-family:var(--px);font-weight:400;font-size:14px;color:var(--gold)}
 #sStats{margin:0;display:grid;gap:8px}
 #sStats div{display:flex;justify-content:space-between;gap:12px;font-family:var(--vt);font-size:24px;border-bottom:2px dotted var(--line);padding-bottom:4px}
 #sStats dt{color:var(--muted)} #sStats dd{margin:0;font-variant-numeric:tabular-nums}
 #sNotes{margin:0;padding-left:20px;font-family:var(--vt);font-size:22px;line-height:1.15;color:#ffc2b8;display:grid;gap:4px}
 
-#jr{z-index:58;background:rgba(10,8,25,.6)}
-.jcard{width:min(560px,100%);max-height:100%;box-sizing:border-box;padding:18px 20px;display:flex;flex-direction:column;gap:12px}
-.jhead{display:flex;justify-content:space-between;align-items:center;gap:12px}
-#jBody{overflow:auto;display:grid;gap:14px;min-height:0}
-#jBody section{display:grid;gap:4px}
-#jBody h3{margin:0 0 2px;font-family:var(--px);font-weight:400;font-size:9px;letter-spacing:1px;color:var(--muted)}
-.jr-row{display:flex;justify-content:space-between;gap:16px;font-family:var(--vt);font-size:23px;line-height:1.05}
-.jr-row > span:first-child{color:var(--muted)}
-.hf{color:#ff6b7a} .he{color:#5f5994}
+#jr{z-index:58;background:rgba(10,8,25,.55)}
+.pm{width:min(640px,100%);max-height:100%;box-sizing:border-box;padding:14px;display:flex;flex-direction:column;gap:10px;overflow:auto}
+.pm-top{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:10px;background:var(--ink);border:2px solid var(--line);padding:10px 12px}
+.pm-clock{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
+#pmTime{font-family:var(--px);font-size:20px;color:var(--cream);font-variant-numeric:tabular-nums}
+#pmDate{font-family:var(--px);font-size:10px;color:var(--gold)}
+.pm-time{display:flex;align-items:center;gap:8px}
+#pmSpeed{font-family:var(--px);font-size:9px;padding:6px 8px;border:2px solid var(--mint);color:var(--mint);min-width:72px;text-align:center}
+#pmSpeed.frozen{border-color:#ff8a7a;color:#ff8a7a;animation:blink 1s steps(1) infinite}
+.pm-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.tile{background:var(--panel2);border:2px solid var(--line);padding:8px 10px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.tile .k{font-family:var(--px);font-size:8px;letter-spacing:1px;color:var(--muted)}
+.tile .v{font-family:var(--px);font-size:15px;color:var(--cream);font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tile .s{font-family:var(--vt);font-size:19px;line-height:1;color:var(--muted)}
+#pmMoney{color:var(--mint)}
+.ebarH{height:12px;background:var(--ink);border:2px solid var(--line);position:relative}
+#pmEFill{position:absolute;left:0;top:0;bottom:0}
+.pm-row{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:8px}
+.panel{background:var(--panel2);border:2px solid var(--line);padding:8px 10px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.panel h3{margin:0;font-family:var(--px);font-weight:400;font-size:8px;letter-spacing:1px;color:var(--muted)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{display:inline-flex;align-items:center;gap:6px;font-family:var(--vt);font-size:20px;line-height:1;padding:4px 8px 5px;border:2px solid var(--line);background:var(--ink);color:var(--cream)}
+.chip i{width:8px;height:8px;border:2px solid var(--muted);display:inline-block}
+.chip.on{color:var(--muted)} .chip.on i{background:var(--mint);border-color:var(--mint)}
+.chip.warn{border-color:var(--gold)} .chip.warn i{border-color:var(--gold)}
+.frow{display:flex;justify-content:space-between;align-items:center;gap:10px;font-family:var(--vt);font-size:20px;line-height:1}
+.hearts{display:flex;gap:2px}
+.hearts i{width:10px;height:9px;display:inline-block;background:#5f5994;clip-path:polygon(0 20%,20% 0,40% 0,50% 20%,60% 0,80% 0,100% 20%,100% 50%,50% 100%,0 50%)}
+.hearts i.on{background:#ff6b7a}
+.gear{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.slot{background:var(--ink);border:2px solid var(--line);padding:6px;display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center;min-height:62px;justify-content:center}
+.slot b{font-family:var(--px);font-weight:400;font-size:8px;color:var(--cream)}
+.slot span{font-family:var(--vt);font-size:17px;line-height:1;color:var(--mint)}
+.slot.empty b{color:#5f5994} .slot.empty span{color:#5f5994}
+.slot .ico{width:24px;height:16px;image-rendering:pixelated}
+.pm-foot{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px;font-family:var(--vt);font-size:19px;color:var(--muted)}
+.pm-btns{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 .bad{color:#ff8a7a;font-weight:400}
-.ck{display:inline-block;width:12px;height:12px;border:2px solid var(--cream);margin-right:8px;vertical-align:-1px}
-.ck.on{background:var(--mint);border-color:var(--mint)}
-.jsmall{margin:0;font-family:var(--vt);font-size:21px;color:var(--cream)}
-.jfoot{display:flex;flex-wrap:wrap;gap:10px;align-items:center;font-family:var(--vt);font-size:21px}
+@media (max-width:560px){.pm{padding:10px;gap:8px}.pm-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}.pm-row{grid-template-columns:minmax(0,1fr)}.gear{grid-template-columns:repeat(4,minmax(0,1fr))}.slot{min-height:44px;padding:4px}.slot span{display:none}.slot b{font-size:7px}#pmTime{font-size:15px}.tile{padding:6px 8px}.tile .v{font-size:12px}.chip{font-size:18px}.pm-foot{font-size:17px}}
 .sbtn{font-family:var(--px);font-size:9px;background:var(--panel2);border:2px solid var(--line);padding:8px 10px;cursor:pointer;min-height:36px}
 
 #touch{position:absolute;left:0;right:0;bottom:0;height:170px;z-index:35;pointer-events:none}
@@ -123,7 +148,7 @@ button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
     <span class="lbl">E</span>
     <div id="etrack"><div id="efill"></div></div>
     <span id="enum"></span>
-    <button id="menuBtn" type="button" aria-label="Open journal">MENU</button>
+    <button id="menuBtn" type="button" aria-label="Open menu">MENU</button>
   </div>
 
   <div id="toasts" aria-live="polite"></div>
@@ -143,7 +168,7 @@ button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
       <button type="button" data-d="down" aria-label="Move down">&#9660;</button>
     </div>
     <div class="abtns">
-      <button type="button" id="tB" aria-label="Journal or back">B</button>
+      <button type="button" id="tB" aria-label="Menu or back">B</button>
       <button type="button" id="tA" aria-label="Talk or use">A</button>
     </div>
   </div>
@@ -157,17 +182,34 @@ button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
         <button type="button" id="bNew">New Game</button>
         <button type="button" id="bCont" disabled>Continue</button>
       </div>
-      <p class="keys" id="tKeys">Arrows or WASD to move &middot; E to talk &middot; Q for journal</p>
+      <p class="keys" id="tKeys">Arrows or WASD to move &middot; E to talk &middot; Q for menu</p>
     </div>
   </div>
 
   <div id="jr" class="overlay" hidden>
-    <div class="jcard box">
-      <div class="jhead"><h2>Journal</h2><button type="button" class="sbtn" id="jClose">Close</button></div>
-      <div id="jBody"></div>
-      <div class="jfoot">
-        <button type="button" class="sbtn" id="jReset">Start over</button>
-        <span id="jConfirm" hidden>Erase your save? <button type="button" class="sbtn" id="jYes">Yes, erase</button> <button type="button" class="sbtn" id="jNo">Keep it</button></span>
+    <div class="pm box" role="dialog" aria-label="Pause menu">
+      <div class="pm-top">
+        <div class="pm-clock"><span id="pmTime"></span><span id="pmDate"></span></div>
+        <div class="pm-time"><span id="pmSpeed" aria-live="polite"></span><button type="button" class="sbtn" id="pmFreeze"></button></div>
+      </div>
+      <div class="pm-grid">
+        <div class="tile"><span class="k">MONEY</span><span class="v" id="pmMoney"></span><span class="s" id="pmEarned"></span></div>
+        <div class="tile"><span class="k">ENERGY</span><div class="ebarH"><div id="pmEFill"></div></div><span class="s" id="pmEnergy"></span></div>
+        <div class="tile"><span class="k">GRADES</span><span class="v" id="pmGrade"></span><span class="s" id="pmGradeN"></span></div>
+        <div class="tile"><span class="k">CURFEW</span><span class="v" id="pmCurfew"></span><span class="s" id="pmStatus"></span></div>
+      </div>
+      <div class="pm-row">
+        <section class="panel"><h3>TODAY</h3><div class="chips" id="pmToday"></div></section>
+        <section class="panel"><h3>NEIGHBORS</h3><div id="pmFriends" style="display:grid;gap:8px"></div></section>
+      </div>
+      <section class="panel"><h3>GEAR</h3><div class="gear" id="pmGear"></div></section>
+      <div class="pm-foot">
+        <span id="pmHint"></span>
+        <div class="pm-btns">
+          <button type="button" class="sbtn" id="jReset">Start over</button>
+          <span id="jConfirm" hidden>Erase your save? <button type="button" class="sbtn" id="jYes">Yes, erase</button> <button type="button" class="sbtn" id="jNo">Keep it</button></span>
+          <button type="button" class="sbtn" id="jClose">Resume</button>
+        </div>
       </div>
     </div>
   </div>
@@ -1064,6 +1106,7 @@ async function onEnterHome() {
 }
 async function passOut() {
   if (ending) return;
+  if (jrOpen) closeJr();
   await talk(["It's 2 AM. Your legs give out and everything goes dark..."]);
   if (S.map !== 'home' && !S.caught) { S.late = true; S.caught = true; setGrounded(); }
   await endDay(true);
@@ -1107,26 +1150,54 @@ function sumDone() { if (!sumOpen) return; sumOpen = false; sum.hidden = true; c
 $('sNext').addEventListener('click', sumDone);
 
 const jr = $('jr');
-function ck(on, label) { return '<div class="jr-row"><span><i class="ck' + (on ? ' on' : '') + '"></i>' + label + '</span><span></span></div>'; }
-function buildJr() {
-  const h = id => { const n = hearts(id); let s = ''; for (let i = 0; i < 5; i++) s += '<span class="' + (i < n ? 'hf' : 'he') + '">♥</span>'; return s; };
-  const row = (k, v) => '<div class="jr-row"><span>' + k + '</span><span>' + v + '</span></div>';
-  let todo = '';
-  if (schoolDay()) todo += ck(S.attended, 'Go to class by 8 AM');
-  todo += ck(!S.hw, S.hw ? 'Do your homework' : 'No homework due');
-  todo += ck(S.chores.trash, 'Take out the trash');
-  todo += ck(S.ate, 'Dinner with Mom at 6');
-  if (S.ate || S.groundedToday) todo += ck(S.chores.dishes, 'Wash the dishes');
-  todo += ck(false, 'Home by ' + shortTime(curfew()));
-  return '<section><h3>TODAY</h3>' + row('Date', dateStr()) + row('Time', fmtTime(S.time)) + row('Status', S.groundedToday ? '<b class="bad">Grounded</b>' : 'Free') + '</section>' +
-    '<section><h3>ALEX</h3>' + row('Money', '$' + S.money) + row('Energy', Math.round(S.energy) + ' / ' + S.max) + row('Grades', letter(S.grades) + ' (' + S.grades + ')') + row('Shoes', S.sneakers ? 'Fresh runners, +1 speed' : 'Old sneakers') + row('Tutor', S.tutor ? 'Ms. Lin' : 'None yet') + '</section>' +
-    '<section><h3>TO DO</h3>' + todo + '</section>' +
-    '<section><h3>NEIGHBORS</h3>' + row("John, Valentino's", h('john')) + row('Mrs. Russo', h('russo')) + '</section>' +
-    '<section><h3>HOW IT WORKS</h3><p class="jsmall">Tasks cost energy. Sleep refills it, and going to bed late, hungry, or wired from games means less energy tomorrow. Miss curfew and Mom grounds you. Money buys upgrades like sneakers and a tutor.</p></section>' +
-    '<section><h3>CONTROLS</h3><p class="jsmall">' + (isTouch ? 'Pad to move. A to talk or use. B opens this journal.' : 'Arrow keys or WASD to move. E or Space to talk or use. Q opens this journal.') + '</p></section>';
+let jrFrozen = false;
+const ICONS = {
+  shoe: ['........', '........', '..rr....', '..rrr...', '..rrrrr.', '.wwwwwww', '........'],
+  book: ['.bbbbbb.', '.bwwwwb.', '.bwbbwb.', '.bwwwwb.', '.bwbbwb.', '.bbbbbb.', '........'],
+  lock: ['..mmmm..', '.m....m.', '.m....m.', 'mmmmmmmm', 'mmmmmmmm', 'mmmmmmmm', '........'],
+};
+const ICOL = { r: '#e04a3f', w: '#f2eee6', b: '#2f6fb0', m: '#5f5994' };
+function icon(name) {
+  const rows = ICONS[name]; let r = '';
+  rows.forEach((row, y) => { for (let x = 0; x < row.length; x++) { const c = ICOL[row[x]]; if (c) r += '<rect x="' + x + '" y="' + y + '" width="1" height="1" fill="' + c + '"/>'; } });
+  return '<svg class="ico" viewBox="0 0 8 7" aria-hidden="true" shape-rendering="crispEdges">' + r + '</svg>';
 }
-function openJr() { jrOpen = true; $('jBody').innerHTML = buildJr(); $('jConfirm').hidden = true; $('jReset').hidden = false; jr.hidden = false; }
-function closeJr() { jrOpen = false; jr.hidden = true; }
+function chip(on, label, warn) { return '<span class="chip' + (on ? ' on' : '') + (warn && !on ? ' warn' : '') + '"><i></i>' + label + '</span>'; }
+function buildJr() {
+  let t = '';
+  if (schoolDay()) t += chip(S.attended, 'Class', S.time >= 420 && S.time < 495);
+  t += chip(!S.hw, 'Homework', S.hw);
+  t += chip(S.chores.trash, 'Trash');
+  t += chip(S.ate, 'Dinner', S.time >= 1050 && S.time <= 1230);
+  if (S.ate || S.groundedToday) t += chip(S.chores.dishes, 'Dishes');
+  $('pmToday').innerHTML = t;
+  const hh = id => { const n = hearts(id); let s = '<span class="hearts" aria-label="' + n + ' of 5 hearts">'; for (let i = 0; i < 5; i++) s += '<i class="' + (i < n ? 'on' : '') + '"></i>'; return s + '</span>'; };
+  $('pmFriends').innerHTML = '<div class="frow"><span>John</span>' + hh('john') + '</div><div class="frow"><span>Mrs. Russo</span>' + hh('russo') + '</div>';
+  const slot = (has, ico, name, perk) => '<div class="slot' + (has ? '' : ' empty') + '">' + icon(has ? ico : 'lock') + '<b>' + name + '</b><span>' + perk + '</span></div>';
+  $('pmGear').innerHTML = slot(S.sneakers, 'shoe', S.sneakers ? 'RUNNERS' : 'SNEAKERS', S.sneakers ? '+1 speed' : '$45 shop') +
+    slot(S.tutor, 'book', S.tutor ? 'MS. LIN' : 'TUTOR', S.tutor ? 'Easier homework' : '$80 at school') +
+    slot(false, 'lock', 'EMPTY', 'Coming soon') + slot(false, 'lock', 'EMPTY', 'Coming soon');
+  $('pmHint').textContent = (isTouch ? 'Tap Resume to play. ' : 'Q to resume, P to stop time. ') + 'Progress saves when you go to bed.';
+  refreshJr();
+}
+function refreshJr() {
+  setTxt($('pmTime'), fmtTime(S.time)); setTxt($('pmDate'), dateStr());
+  setTxt($('pmSpeed'), jrFrozen ? 'PAUSED' : 'TIME 0.75x');
+  $('pmSpeed').classList.toggle('frozen', jrFrozen);
+  setTxt($('pmFreeze'), jrFrozen ? 'Resume time' : 'Pause time');
+  setTxt($('pmMoney'), '$' + S.money); setTxt($('pmEarned'), '+$' + S.earned + ' today');
+  const pct = clamp(S.energy / S.max, 0, 1), f = $('pmEFill');
+  f.style.width = Math.round(pct * 100) + '%'; f.style.background = pct > 0.5 ? '#5fb36a' : pct > 0.25 ? '#f2b33d' : '#c8423b';
+  setTxt($('pmEnergy'), Math.round(S.energy) + ' / ' + S.max);
+  setTxt($('pmGrade'), letter(S.grades)); setTxt($('pmGradeN'), S.grades + ' avg');
+  setTxt($('pmCurfew'), shortTime(curfew()));
+  const st = $('pmStatus'), late = S.late && S.map !== 'home';
+  setTxt(st, late ? 'Late! Get home' : S.groundedToday ? 'Grounded' : 'Free'); st.classList.toggle('bad', late || S.groundedToday);
+}
+function setFreeze(v) { jrFrozen = v; refreshJr(); }
+function openJr() { jrOpen = true; jrFrozen = false; buildJr(); $('jConfirm').hidden = true; $('jReset').hidden = false; jr.hidden = false; setTimeout(() => { $('jr').querySelector('.pm').scrollTop = 0; $('jClose').focus({ preventScroll: true }); }, 30); }
+function closeJr() { jrOpen = false; jrFrozen = false; jr.hidden = true; }
+$('pmFreeze').addEventListener('click', () => setFreeze(!jrFrozen));
 $('jClose').addEventListener('click', closeJr);
 $('menuBtn').addEventListener('click', () => { if (mode === 'play' && !busy && !DL.open && !ending) openJr(); });
 $('jReset').addEventListener('click', () => { $('jConfirm').hidden = false; $('jReset').hidden = true; });
@@ -1171,7 +1242,7 @@ function press(k) {
     else if (B && DL.opts && !dOpts.hidden) closeDlg(DL.opts.length - 1);
     return;
   }
-  if (jrOpen) { if (A || B) closeJr(); return; }
+  if (jrOpen) { if (k === 'p') setFreeze(!jrFrozen); else if (B) closeJr(); return; }
   if (busy || fading || ending) return;
   if (A) interact(); else if (B) openJr();
 }
@@ -1335,17 +1406,22 @@ function render() {
       ctx.globalCompositeOperation = 'source-over';
     }
   }
-  if (mode === 'play') updateHud();
+  if (mode === 'play') { updateHud(); if (jrOpen) refreshJr(); }
 }
 
 /* ---------- update loop ---------- */
+function advanceClock(d) { clockAcc += d; while (clockAcc >= 0.6) { clockAcc -= 0.6; S.time += 1; checkClock(); if (busy) break; } }
 function update(dt) {
   animT += dt; dlgUpdate(dt);
   if (mode === 'title') { updateTrains(dt); return; }
   if (mode !== 'play') return;
-  const paused = busy || DL.open || jrOpen || fading || ending || sumOpen;
+  const paused = busy || DL.open || fading || ending || sumOpen;
   moving = false; shake = 0;
   if (paused) return;
+  if (jrOpen) {
+    if (!jrFrozen) { advanceClock(dt * 0.75); if (S.map === 'out') updateTrains(dt * 0.75); }
+    return;
+  }
   let dx = 0, dy = 0;
   if (inp('up')) dy -= 1; if (inp('down')) dy += 1; if (inp('left')) dx -= 1; if (inp('right')) dx += 1;
   if (dx || dy) {
@@ -1357,8 +1433,7 @@ function update(dt) {
     checkWarp();
   }
   for (const n of npcsHere(S.map, S.time)) { n.t -= dt; if (n.t <= 0) { n.t = 3 + Math.random() * 4; n.dir = Math.random() < 0.6 ? n.base : rnd(['down', 'left', 'right']); } }
-  clockAcc += dt;
-  while (clockAcc >= 0.6) { clockAcc -= 0.6; S.time += 1; checkClock(); if (busy) break; }
+  advanceClock(dt);
   if (S.map === 'out') {
     updateTrains(dt);
     if (S.y > 92 && S.y < 170) for (const tr of trains) { const x0 = tr.x, x1 = tr.x + CARS * (CL + GAP); if (S.x > x0 - 30 && S.x < x1 + 30) shake = 1; }
@@ -1386,13 +1461,13 @@ async function startPlay(intro) {
       await talk([{ n: 'Mom', t: "Alex! You up? First day of junior year. School starts at 8, don't be late!" }, { n: 'Alex', t: "Five more minutes..." }, { n: 'Mom', t: "NOW, Alex!" }]);
     });
     toast(isTouch ? 'Use the pad to move. Tap A to talk or use things.' : 'Move with arrows or WASD. Press E to talk or use things.');
-    setTimeout(() => toast(isTouch ? 'Tap B or MENU for your journal.' : 'Press Q for your journal and to-do list.'), 2800);
+    setTimeout(() => toast(isTouch ? 'Tap B or MENU to open the menu.' : 'Press Q to open the menu.'), 2800);
     save();
   } else toast(dateStr());
 }
 $('bNew').addEventListener('click', () => { S = fresh(); FR = {}; startPlay(true); });
 $('bCont').addEventListener('click', () => { const d = loadSave(); if (!d) return; S = Object.assign(fresh(), d); FR = {}; startPlay(false); });
-if (isTouch) $('tKeys').textContent = 'Use the on-screen pad to move · A to talk · B for journal';
+if (isTouch) $('tKeys').textContent = 'Use the on-screen pad to move · A to talk · B for menu';
 
 /* ---------- boot ---------- */
 function build() {

@@ -9,7 +9,9 @@ Open `index.html` in any browser, or play the hosted version once GitHub Pages i
 - **Computer.** Arrow keys or WASD to move, E or Space to talk or use, Q for the journal.
 - **Phone.** On-screen pad to move, A to talk or use, B for the journal.
 
-The game saves each morning in the browser you play in.
+The game saves each night when you go to bed, in the browser you play in.
+
+The cover art is in `art/cover.html`.
 
 ## What's in Chapter 1 so far
 
