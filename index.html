@@ -13,6 +13,7 @@
 :root{
   --ink:#0f0d22; --panel:#1d1a35; --panel2:#2c2754; --cream:#fff1cf; --gold:#ffd27f;
   --red:#c8423b; --mint:#9fe0a8; --muted:#b9b2d6; --line:#4a4470;
+  --grade:sepia(.26) saturate(1.55);
   --px:'Press Start 2P', ui-monospace, Menlo, monospace;
   --vt:'VT323', ui-monospace, Menlo, monospace;
   color-scheme: dark;
@@ -21,7 +22,7 @@
 html,body{height:100%;background:var(--ink);color:var(--cream);overflow:hidden}
 body{margin:0;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
 #app{position:fixed;inset:0;overflow:hidden;background:var(--ink)}
-#game{position:absolute;left:0;top:0;image-rendering:pixelated;image-rendering:crisp-edges}
+#game{position:absolute;left:0;top:0;image-rendering:pixelated;image-rendering:crisp-edges;filter:var(--grade)}
 .box{background:var(--panel);border:3px solid var(--cream);box-shadow:0 0 0 3px var(--ink),0 6px 0 3px rgba(0,0,0,.35)}
 button{font:inherit;color:inherit}
 button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
@@ -1321,7 +1322,7 @@ function render() {
   if (dusk > 0 && m.dark === 1) { ctx.fillStyle = 'rgba(255,120,70,' + (dusk * 0.13) + ')'; ctx.fillRect(0, 0, VW, VH); }
   if (lvl > 0.01) {
     lctx.globalCompositeOperation = 'source-over'; lctx.clearRect(0, 0, VW, VH);
-    lctx.fillStyle = 'rgba(14,10,40,' + lvl + ')'; lctx.fillRect(0, 0, VW, VH);
+    lctx.fillStyle = 'rgba(34,14,36,' + lvl + ')'; lctx.fillRect(0, 0, VW, VH);
     lctx.globalCompositeOperation = 'destination-out';
     for (const L of m.lights) hole(L.x - cx, L.y - cy, L.r, 0.95);
     if (lvl > 0.12) for (const w of m.wins) if (w.lit) hole(w.x + w.w / 2 - cx, w.y + w.h / 2 - cy, 14, 0.8);
