@@ -2,9 +2,23 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#0f0d22">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Benson Boys">
 <title>Benson Boys</title>
+<link rel="apple-touch-icon" href="data:image/png;base64,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">
+<script>
+/* Home screen manifest, built here so the game stays in one file */
+(function () {
+  var url = location.href.split(/[?#]/)[0];
+  var man = { name: 'Benson Boys', short_name: 'Benson Boys', start_url: url, scope: url.replace(/[^\/]*$/, ''), display: 'standalone', background_color: '#0f0d22', theme_color: '#0f0d22', icons: [{ src: document.querySelector('link[rel=apple-touch-icon]').href, sizes: '512x512', type: 'image/png' }] };
+  var l = document.createElement('link'); l.rel = 'manifest'; l.href = 'data:application/manifest+json,' + encodeURIComponent(JSON.stringify(man));
+  document.head.appendChild(l);
+})();
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
@@ -19,8 +33,8 @@
   color-scheme: dark;
 }
 [hidden]{display:none!important}
-html,body{height:100%;background:var(--ink);color:var(--cream);overflow:hidden}
-body{margin:0;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;background:var(--ink);color:var(--cream);overflow:hidden;overscroll-behavior:none;touch-action:none;-webkit-text-size-adjust:100%;text-size-adjust:100%}
+body{margin:0;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none}
 #app{position:fixed;inset:0;overflow:hidden;background:var(--ink)}
 #game{position:absolute;left:0;top:0;image-rendering:pixelated;image-rendering:crisp-edges;filter:var(--grade)}
 .box{background:var(--panel);border:3px solid var(--cream);box-shadow:0 0 0 3px var(--ink),0 6px 0 3px rgba(0,0,0,.35)}
@@ -75,8 +89,18 @@ button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
 #sStats dt{color:var(--muted)} #sStats dd{margin:0;font-variant-numeric:tabular-nums}
 #sNotes{margin:0;padding-left:20px;font-family:var(--vt);font-size:22px;line-height:1.15;color:#ffc2b8;display:grid;gap:4px}
 
+#inst{z-index:70;background:rgba(15,13,34,.92)}
+.icard{max-height:100%;overflow:auto;touch-action:pan-y}
+.icard p{margin:0;font-family:var(--vt);font-size:23px;line-height:1.1}
+#instSteps{margin:0;padding-left:28px;display:grid;gap:10px;font-family:var(--vt);font-size:23px;line-height:1.1}
+#instSteps li::marker{color:var(--gold)}
+#instSteps b{font-weight:400;color:var(--gold)}
+#instSteps svg{width:15px;height:19px;vertical-align:-3px;margin:0 2px}
+#instNote{color:var(--muted);font-size:20px}
+.lbtn{font-family:var(--vt);font-size:21px;background:none;border:0;padding:6px;color:var(--muted);text-decoration:underline;cursor:pointer}
+
 #jr{z-index:58;background:rgba(10,8,25,.55)}
-.pm{width:min(640px,100%);max-height:100%;box-sizing:border-box;padding:14px;display:flex;flex-direction:column;gap:10px;overflow:auto}
+.pm{width:min(640px,100%);max-height:100%;box-sizing:border-box;padding:14px;display:flex;flex-direction:column;gap:10px;overflow:auto;touch-action:pan-y}
 .pm-top{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:10px;background:var(--ink);border:2px solid var(--line);padding:10px 12px}
 .pm-clock{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
 #pmTime{font-family:var(--px);font-size:20px;color:var(--cream);font-variant-numeric:tabular-nums}
@@ -216,6 +240,17 @@ button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
       <dl id="sStats"></dl>
       <ul id="sNotes"></ul>
       <button type="button" class="pbtn" id="sNext">Wake up</button>
+    </div>
+  </div>
+
+  <div id="inst" class="overlay" hidden>
+    <div class="scard icard box" role="dialog" aria-label="Add to home screen">
+      <h2>ONE QUICK STEP</h2>
+      <p>Benson Boys plays full screen from your home screen. Add it once, then open it from the new icon.</p>
+      <ol id="instSteps"></ol>
+      <button type="button" class="pbtn" id="instGo" hidden>Install</button>
+      <p id="instNote"></p>
+      <button type="button" class="lbtn" id="instSkip">Play in the browser for now</button>
     </div>
   </div>
 
@@ -1282,6 +1317,37 @@ for (const [id, key] of [['tA', 'e'], ['tB', 'q']]) {
   b.addEventListener('pointerup', off); b.addEventListener('pointercancel', off);
 }
 
+/* Safari ignores the viewport lock, so pinch and double tap zoom are stopped by hand */
+for (const ev of ['gesturestart', 'gesturechange', 'gestureend']) document.addEventListener(ev, e => e.preventDefault());
+document.addEventListener('touchmove', e => { if (e.touches.length > 1 || (e.scale && e.scale !== 1)) e.preventDefault(); }, { passive: false });
+let lastTouchEnd = 0;
+document.addEventListener('touchend', e => {
+  const now = Date.now();
+  if (now - lastTouchEnd < 350) { e.preventDefault(); if (e.target.click) e.target.click(); }
+  lastTouchEnd = now;
+}, { passive: false });
+if (isTouch) document.addEventListener('contextmenu', e => e.preventDefault());
+
+/* ---------- home screen setup ---------- */
+const SHARE_ICON = '<svg viewBox="0 0 15 19" aria-hidden="true"><path d="M7.5 1v11M3.5 5l4-4 4 4M4.5 8H1.5v10h12V8h-3" fill="none" stroke="#ffd27f" stroke-width="1.6"/></svg>';
+const INSTALL = {
+  ios: { steps: ['Tap the <b>Share</b> button' + SHARE_ICON + '. If you do not see it, tap the <b>...</b> button first.', 'Tap <b>Add to Home Screen</b>. You may need to tap <b>More</b> or scroll down to find it.', 'Tap <b>Add</b>, then open Benson Boys from your home screen.'], note: 'Opened this link inside another app? Open it in Safari first.' },
+  android: { steps: ['Tap the <b>three dots</b> at the top of Chrome.', 'Tap <b>Add to Home screen</b> or <b>Install app</b>.', 'Tap <b>Install</b>, then open Benson Boys from your home screen.'], note: 'Opened this link inside another app? Open it in Chrome first.' },
+};
+const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+const isAndroid = /Android/.test(navigator.userAgent);
+const standalone = (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true;
+let installEv = null;
+function showInstall(kind) {
+  const c = INSTALL[kind];
+  $('instSteps').innerHTML = c.steps.map(s => '<li>' + s + '</li>').join('');
+  $('instNote').textContent = c.note; $('inst').hidden = false;
+}
+window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); installEv = e; $('instGo').hidden = false; });
+window.addEventListener('appinstalled', () => { installEv = null; $('instGo').hidden = true; $('instSteps').innerHTML = '<li>All set. Open Benson Boys from your home screen.</li>'; });
+$('instGo').addEventListener('click', () => { if (installEv) installEv.prompt(); });
+$('instSkip').addEventListener('click', () => { $('inst').hidden = true; });
+
 /* ---------- movement & interaction ---------- */
 const DIRV = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] };
 function blocked(x, y) {
@@ -1501,6 +1567,7 @@ function build() {
   for (const n of NPCS) NPC_FR[n.id] = buildFrames(PALS[n.id], n.id === 'john' ? JOHN_OV : null);
   maps.out = buildOutside(); maps.home = buildHome(); maps.pizza = buildPizza();
   toTitle();
+  if (!standalone && (isIOS || isAndroid)) showInstall(isIOS ? 'ios' : 'android');
 }
 requestAnimationFrame(loop);
 build();
