@@ -628,6 +628,7 @@ function buildOutside() {
   m.cars = [[2, 27, '#c8423b', 'car'], [24, 27, '#2f6fb0', 'car'], [11, 29, '#e8e8e8', 'car'], [30, 29, '#2a2a30', 'car'], [14, 7, '#f2b33d', 'dcar']];
   for (const [x, y, , id] of m.cars) { setS(m, x, y); setS(m, x + 1, y); m.objs[x + ',' + y] = id; m.objs[(x + 1) + ',' + y] = id; }
   setS(m, 21, 26); m.objs['21,26'] = 'hydrant';
+  setS(m, 11, 26); m.objs['11,26'] = 'cans'; m.objs['12,26'] = 'stray';
   for (const x of [30, 31, 32]) { setS(m, x, 10); m.objs[x + ',10'] = 'station'; }
   m.lights.push({ x: 30 * T, y: 10 * T + 2, r: 24 }, { x: 33 * T, y: 10 * T + 2, r: 24 });
   for (let x = 22; x <= 28; x++) { setS(m, x, 12); m.objs[x + ',12'] = 'bleachers'; }
@@ -727,6 +728,7 @@ function drawOutside(m, R) {
     g.fillStyle = '#c8423b'; g.fillRect(px + 1, py + 4, 1, 2); g.fillRect(px + 1, py + 10, 1, 2);
   }
   { const px = 21 * T + 4, py = 26 * T; g.fillStyle = 'rgba(0,0,0,.25)'; g.fillRect(px, py + 13, 9, 2); g.fillStyle = '#c8423b'; g.fillRect(px + 1, py + 4, 6, 9); g.fillStyle = '#a8322b'; g.fillRect(px, py + 3, 8, 2); g.fillRect(px + 2, py + 1, 4, 2); g.fillRect(px - 1, py + 7, 2, 2); g.fillRect(px + 7, py + 7, 2, 2); g.fillStyle = '#e2685f'; g.fillRect(px + 2, py + 5, 1, 6); }
+  { const px = 11 * T + 3, py = 26 * T; g.fillStyle = 'rgba(0,0,0,.25)'; g.fillRect(px - 1, py + 13, 12, 2); g.fillStyle = '#7d858e'; g.fillRect(px, py + 3, 10, 11); g.fillStyle = '#5d6670'; g.fillRect(px + 2, py + 3, 1, 11); g.fillRect(px + 5, py + 3, 1, 11); g.fillRect(px + 8, py + 3, 1, 11); g.fillStyle = '#a9b1ba'; g.fillRect(px - 1, py + 1, 12, 3); g.fillRect(px + 3, py, 4, 1); g.fillStyle = '#c3cad1'; g.fillRect(px - 1, py + 1, 12, 1); }
   { const px = 30 * T, py = 10 * T; g.fillStyle = '#26322f'; g.fillRect(px, py + 1, 48, 15); g.fillStyle = '#44564f'; g.fillRect(px, py + 1, 48, 2); g.fillStyle = '#1b1630'; g.fillRect(px + 3, py + 4, 42, 10); txt(g, '18 AV', px + 24, py + 5, '#f4f1ea'); g.fillStyle = '#3f9a5c'; g.fillRect(px - 2, py - 1, 5, 5); g.fillRect(px + 45, py - 1, 5, 5); }
 }
 
@@ -844,6 +846,7 @@ function fresh() {
     fr: { john: 0, russo: 0 }, talked: {}, jobs: {}, invited: {}, hw: false, attended: false, ate: false,
     chores: { trash: false, dishes: false }, late: false, caught: false, gamesLate: false, freeSlice: false,
     earned: 0, offenses: 0, groundPending: false, groundType: 'early', groundedToday: false,
+    carrying: false, trashDays: 0, stray: false, kitten: null,
     map: 'home', x: 3 * T + 8, y: 3 * T + 12, dir: 'down'
   };
 }
@@ -925,6 +928,7 @@ dlg.addEventListener('click', () => { if (DL.opts && DL.done && DL.i === DL.line
 const fadeEl = $('fade');
 let fading = false;
 function fade(on) { fading = true; return new Promise(r => { fadeEl.classList.toggle('on', on); setTimeout(() => { if (!on) fading = false; r(); }, 360); }); }
+const wait = ms => new Promise(r => setTimeout(r, ms));
 /* Time-passing screen: runs on the black fade, the clock rolls from one time to the next under a short label */
 const reduceMotion = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
 function rollClock(from, to, label) {
@@ -1104,11 +1108,18 @@ const ACT = {
   },
   async trash() {
     if (S.chores.trash) { await talk(["The trash is already out at the curb."]); return; }
-    const c = await talk(["Take out the trash? Takes 10 energy."], ['Take it out', 'Later']);
+    if (S.carrying) { await talk(["You already have the bag. The cans are out front."]); return; }
+    const c = await talk(["Take out the trash? Takes 10 energy. The cans are out front."], ['Pick it up', 'Later']);
     if (c !== 0 || !spend(10)) return;
-    pass(15); S.chores.trash = true;
-    if (!S.groundedToday) { earn(2); await talk(["You drag the bag out to the curb. Mom slips you two dollars."]); }
-    else await talk(["You drag the bag out to the curb. No allowance while you're grounded."]);
+    S.carrying = true; bagLift = animT; toast('Carry the bag to the cans out front.');
+  },
+  async cans() {
+    if (!S.carrying) { await talk([S.chores.trash ? "The can is full and the lid won't close. Classic." : "The trash cans. The bag is still in the kitchen."]); return; }
+    S.carrying = false; bagToss = { t: animT, x: S.x + 8, y: S.y - 13 };
+    await wait(450); bagToss = null;
+    pass(15); S.chores.trash = true; S.trashDays++;
+    if (!S.groundedToday) { earn(2); await talk(["The bag lands in the can with a thud. Two bucks from Mom, as promised."]); }
+    else await talk(["The bag lands in the can with a thud. No allowance while you're grounded."]);
   },
   async counter() { await talk([rnd(["Mail, keys, and a bowl of lemons nobody ever uses.", "A coffee pot that has been on since 1998."])]); },
   async stove() { await talk(["A big pot of sauce is simmering on the stove. There is always a pot of sauce on the stove."]); },
@@ -1129,6 +1140,7 @@ const ACT = {
   async school() {
     if (!schoolDay()) { await talk(["The doors are locked. No school on the weekend!"]); return; }
     if (S.attended) { await talk(["School's out for today. Freedom."]); return; }
+    if (S.carrying) { await talk(["You can't walk into class holding a bag of trash. Get rid of it first."]); return; }
     const t = S.time;
     if (t < 420) { await talk(["The doors don't open until 7."]); return; }
     if (t > 660) { await talk(["It's way too late now. Classes are almost over. Mom's gonna hear about this."]); return; }
@@ -1203,6 +1215,7 @@ async function endDay(passed) {
   }
   if (S.groundedToday && S.groundType === 'both' && !(S.chores.trash && S.chores.dishes)) { S.groundPending = true; notes.push('You skipped chores while grounded. Grounded another day.'); }
   if (S.caught) notes.push('Missed curfew. Grounded tomorrow.');
+  if (S.carrying) { S.carrying = false; notes.push('The trash bag never made it to the cans.'); }
   const sm = { day: S.day, bed: fmtTime(bt), q, energy: Math.round(S.max * q / 100), earned: S.earned, notes };
   S.day++; S.energy = sm.energy; S.time = 390; S.map = 'home'; S.x = 3 * T + 8; S.y = 3 * T + 12; S.dir = 'down';
   Object.assign(S, { talked: {}, jobs: {}, invited: {}, attended: false, ate: false, chores: { trash: false, dishes: false }, late: false, caught: false, gamesLate: false, freeSlice: false, earned: 0 });
@@ -1514,6 +1527,12 @@ function hole(x, y, r, a) {
   g.addColorStop(0, 'rgba(0,0,0,' + a + ')'); g.addColorStop(1, 'rgba(0,0,0,0)');
   lctx.fillStyle = g; lctx.fillRect(x - r, y - r, r * 2, r * 2);
 }
+let bagLift = -9, bagToss = null;
+function drawBag(x, y) {
+  x = Math.round(x); y = Math.round(y);
+  ctx.fillStyle = '#3a3650'; ctx.fillRect(x + 1, y + 2, 6, 1); ctx.fillRect(x, y + 3, 8, 5); ctx.fillRect(x + 1, y + 8, 6, 1);
+  ctx.fillStyle = '#8a86a8'; ctx.fillRect(x + 3, y, 2, 2); ctx.fillRect(x + 2, y + 4, 1, 3); ctx.fillRect(x + 3, y + 3, 2, 1);
+}
 function drawChar(fr, dir, f, x, y, bob) {
   x = Math.round(x); y = Math.round(y);
   ctx.fillStyle = 'rgba(0,0,0,.28)'; ctx.fillRect(x - 5, y - 1, 10, 2); ctx.fillRect(x - 4, y + 1, 8, 1);
@@ -1537,9 +1556,18 @@ function render() {
   for (const n of npcsHere(mapId, time)) ents.push({ y: n.ty * T + 12, d: () => drawChar(NPC_FR[n.id], n.dir, 0, n.tx * T + 8 - cx, n.ty * T + 12 - cy) });
   if (!title) {
     const f = moving ? [1, 0, 2, 0][Math.floor(animT * 8) % 4] : 0;
-    ents.push({ y: S.y, d: () => drawChar(alexFrames(), S.dir, f, S.x - cx, S.y - cy, moving && f === 0 ? -1 : 0) });
+    ents.push({
+      y: S.y, d: () => {
+        drawChar(alexFrames(), S.dir, f, S.x - cx, S.y - cy, moving && f === 0 ? -1 : 0);
+        if (S.carrying) { const p = clamp((animT - bagLift) / 0.35, 0, 1); drawBag(S.x - cx + (S.dir === 'left' ? -12 : 4), S.y - cy - 8 - 9 * p); }
+      }
+    });
   }
   ents.sort((a, b) => a.y - b.y).forEach(e => e.d());
+  if (bagToss && !title) {
+    const p = clamp((animT - bagToss.t) / 0.4, 0, 1), tx = 11 * T + 4, ty = 26 * T - 6;
+    drawBag(bagToss.x + (tx - bagToss.x) * p - cx, bagToss.y + (ty - bagToss.y) * p - Math.sin(p * Math.PI) * 14 - cy);
+  }
 
   if (m.over) {
     const under = !title && S.y > 92 && S.y < 170;
