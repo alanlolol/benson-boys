@@ -58,6 +58,7 @@ button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
 
 #dlg{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 16px);width:min(760px,calc(100% - 28px));box-sizing:border-box;padding:16px 20px 18px;z-index:40;cursor:pointer}
 #app.touch #dlg{bottom:calc(env(safe-area-inset-bottom,0px) + 176px)}
+#app #dlg.top{bottom:auto;top:calc(env(safe-area-inset-top,0px) + 164px)}
 #dname{display:inline-block;font-family:var(--px);font-size:10px;color:var(--ink);background:var(--gold);padding:6px 9px;margin:-32px 0 8px -8px;border:3px solid var(--ink)}
 #dtext{font-family:var(--vt);font-size:27px;line-height:1.08;min-height:58px;white-space:pre-wrap}
 #dopts{display:flex;flex-direction:column;gap:3px;margin-top:10px}
@@ -93,6 +94,9 @@ button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
 #sStats dt{color:var(--muted)} #sStats dd{margin:0;font-variant-numeric:tabular-nums}
 #sNotes{margin:0;padding-left:20px;font-family:var(--vt);font-size:22px;line-height:1.15;color:#ffc2b8;display:grid;gap:4px}
 
+#nameBox{z-index:62;align-items:flex-start;padding-top:calc(env(safe-area-inset-top,0px) + 56px);background:rgba(10,8,25,.72)}
+#nameIn{box-sizing:border-box;width:100%;font-family:var(--vt);font-size:28px;padding:8px 12px;background:var(--ink);color:var(--cream);border:3px solid var(--line);border-radius:0;outline:none;-webkit-user-select:text;user-select:text;touch-action:manipulation}
+#nameIn:focus{border-color:var(--gold)}
 #help{z-index:59;background:rgba(10,8,25,.72)}
 .hcard{width:min(520px,100%);gap:12px}
 #helpList{margin:0;display:grid;gap:9px}
@@ -258,6 +262,14 @@ button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
     </div>
   </div>
 
+  <div id="nameBox" class="overlay" hidden>
+    <form class="scard box" id="nameForm">
+      <h2>NAME YOUR KITTEN</h2>
+      <input id="nameIn" type="text" maxlength="12" autocomplete="off" autocorrect="off" spellcheck="false" enterkeyhint="done" placeholder="Meatball" aria-label="Kitten's name">
+      <button type="submit" class="pbtn">That's the name</button>
+    </form>
+  </div>
+
   <div id="help" class="overlay" hidden>
     <div class="scard hcard icard box" role="dialog" aria-label="How to play">
       <h2>HOW TO PLAY</h2>
@@ -419,6 +431,46 @@ function alexFrames() {
   return FR[key];
 }
 const NPC_FR = {};
+const KIT_PAL = { o: '#3a2418', f: '#e8963a', F: '#b8641f', w: '#fff1cf', e: '#1b1630', p: '#ff9aa8' };
+const KIT_SIT = [
+  "....o......o....",
+  "...ofo....ofo...",
+  "...offffffffo...",
+  "...ofeffffefo...",
+  "...offfppfffo...",
+  "....offffffo....",
+  "....ofwwwwfo.FF.",
+  "....ofwwwwfoF...",
+  "....offFFffoF...",
+  ".....ofo.ofo....",
+];
+const KIT_WALK = (l) => [
+  "..........o..o..",
+  ".........ofoofo.",
+  ".F.......offffo.",
+  ".F.......ofefeo.",
+  "..Foooooooffpfo.",
+  "...offFffFffoo..",
+  "...offffffffo...",
+  l,
+];
+const KIT_SLEEP = [
+  "................",
+  "................",
+  "................",
+  "................",
+  "....oooooooo....",
+  "...offFffFffo...",
+  "..offffffffffo..",
+  "..offfffFfoffo..",
+  "..oFFfffffffeo..",
+  "...oooooooooo...",
+];
+let KIT = null;
+function buildKit() {
+  const right = [KIT_WALK("...oo.oo.oo.oo.."), KIT_WALK("....oo.oo.oo....")].map(r => sprite(r, KIT_PAL));
+  KIT = { sit: sprite(KIT_SIT, KIT_PAL), sleep: sprite(KIT_SLEEP, KIT_PAL), right, left: right.map(flip) };
+}
 
 /* ---------- maps ---------- */
 function makeMap(id, w, h) {
@@ -888,6 +940,9 @@ function talk(lines, opts) {
   return new Promise(res => {
     DL.open = true; DL.lines = lines.map(l => typeof l === 'string' ? { t: l } : l);
     DL.i = 0; DL.opts = opts || null; DL.sel = 0; DL.res = res; dlg.hidden = false; showLine();
+    /* Slide the box up on tall screens when it would sit on top of Alex */
+    const h = window.innerHeight, foot = h - (isTouch ? 176 : 16), ay = (S.y - camY) * SCALE;
+    dlg.classList.toggle('top', h > 600 && ay > foot - 200 && ay < foot + 20);
   });
 }
 function showLine() {
@@ -1059,6 +1114,8 @@ async function talkMom() {
   if (!S.chores.trash) todo.push('take out the trash');
   if ((S.ate || S.groundedToday) && !S.chores.dishes) todo.push('do the dishes');
   if (S.hw) todo.push('finish your homework');
+  if (kitHungry()) todo.push('feed ' + S.kitten.name);
+  if (S.kitten && !S.kitten.water) todo.push('fill the water bowl');
   if (todo.length) lines.push({ n: N, t: "Don't forget to " + listJoin(todo) + ". And you're home by " + shortTime(curfew()) + "." });
   else lines.push({ n: N, t: "All your chores are done. That's my kid. Home by " + shortTime(curfew()) + ", okay?" });
   await talk(lines);
@@ -1120,6 +1177,29 @@ const ACT = {
     pass(15); S.chores.trash = true; S.trashDays++;
     if (!S.groundedToday) { earn(2); await talk(["The bag lands in the can with a thud. Two bucks from Mom, as promised."]); }
     else await talk(["The bag lands in the can with a thud. No allowance while you're grounded."]);
+    if (S.trashDays >= 5 && !S.stray && !S.kitten) {
+      S.stray = true;
+      await talk(["Something rustles behind the can.", "Mew.", "A tiny stray kitten steps out and rubs against your ankle. It's all whiskers and ribs."]);
+      await offerKitten();
+    }
+  },
+  async stray() { await offerKitten(); },
+  async kitten() {
+    const k = S.kitten; if (!k) return;
+    await talk([kitHungry() ? k.name + " meows at the bowl, then at you, then at the bowl again." : !k.water ? k.name + " licks the dry water bowl and gives you a look." : rnd([k.name + " purrs and headbutts your hand.", k.name + " rolls over and attacks your shoelace."])]);
+  },
+  async kbed() { await talk([S.kitten.name + "'s bed. An old towel in a box from the salumeria. It smells faintly of provolone."]); },
+  async kfood() {
+    const k = S.kitten, t = S.time;
+    if (t >= 720 && t < 1080) { await talk(["Breakfast is before noon and dinner is after 6. " + k.name + " will just have to wait."]); return; }
+    if (t < 720 ? k.am : k.pm) { await talk([k.name + " already ate. The bowl is licked clean."]); return; }
+    if (t < 720) k.am = true; else k.pm = true;
+    pass(5); kit.tx = 6 * T + 8; kit.ty = 9 * T + 8; kit.t = 9; toast(k.name + ' is eating');
+  },
+  async kwater() {
+    const k = S.kitten;
+    if (k.water) { await talk(["The water bowl is full. There's a little fur floating in it already."]); return; }
+    k.water = true; pass(5); toast('Water bowl filled');
   },
   async counter() { await talk([rnd(["Mail, keys, and a bowl of lemons nobody ever uses.", "A coffee pot that has been on since 1998."])]); },
   async stove() { await talk(["A big pot of sauce is simmering on the stove. There is always a pot of sauce on the stove."]); },
@@ -1188,6 +1268,72 @@ const ACT = {
   async house() { await talk([rnd(["A neighbor's front door. You can hear a Mets game blasting inside.", "A neighbor's front door. Somebody is practicing the accordion. Badly."])]); },
 };
 
+/* ---------- the kitten ---------- */
+const kitHungry = () => !!S.kitten && (S.time < 720 ? !S.kitten.am : S.time >= 1080 && !S.kitten.pm);
+const kit = { on: false, x: 0, y: 0, tx: 0, ty: 0, t: 0, dir: 'right', move: false, sleep: false };
+const KIT_SPOTS = [[4, 4], [6, 6], [7, 4], [4, 9], [9, 7], [10, 9], [6, 5], [3, 6]];
+const BED_X = 5 * T + 8, BED_Y = 8 * T + 12;
+let momHop = -9;
+/* The bed and bowls only exist once the kitten does, so this runs on New Game, Continue, and adoption */
+function applyPets() {
+  const m = maps.home;
+  [[5, 'kbed'], [6, 'kfood'], [7, 'kwater']].forEach(([x, id]) => {
+    setS(m, x, 8, S.kitten ? 1 : 0);
+    if (S.kitten) m.objs[x + ',8'] = id; else delete m.objs[x + ',8'];
+  });
+  kit.on = !!S.kitten; kit.x = kit.tx = BED_X; kit.y = kit.ty = BED_Y; kit.t = 2;
+}
+function updateKit(dt) {
+  if (!kit.on) return;
+  const nap = S.time >= 1260 || S.time < 420;
+  kit.t -= dt;
+  if (kit.t <= 0) {
+    if (nap) { kit.tx = BED_X; kit.ty = BED_Y; } else { const p = rnd(KIT_SPOTS); kit.tx = p[0] * T + 8; kit.ty = p[1] * T + 12; }
+    kit.t = 3 + Math.random() * 5;
+  }
+  const dx = kit.tx - kit.x, dy = kit.ty - kit.y, d = Math.hypot(dx, dy);
+  kit.move = d > 1.5;
+  if (kit.move) { const s = Math.min(d, 24 * dt); kit.x += dx / d * s; kit.y += dy / d * s; if (Math.abs(dx) > 1) kit.dir = dx > 0 ? 'right' : 'left'; }
+  kit.sleep = nap && !kit.move && Math.abs(kit.x - BED_X) < 2;
+}
+let nameRes = null;
+function askName() {
+  const inp = $('nameIn'); inp.value = ''; $('nameBox').hidden = false; setTimeout(() => inp.focus(), 50);
+  return new Promise(res => { nameRes = res; });
+}
+$('nameForm').addEventListener('submit', e => {
+  e.preventDefault();
+  const inp = $('nameIn'), clean = inp.value.replace(/[^\p{L}\p{N} '-]/gu, '').trim().slice(0, 12);
+  inp.blur(); $('nameBox').hidden = true; window.scrollTo(0, 0);
+  const r = nameRes; nameRes = null; if (r) r(clean || 'Meatball');
+});
+async function offerKitten() {
+  const c = await talk(["The kitten looks up at you. Bring it home?"], ['Adopt the kitten', 'Not today']);
+  if (c !== 0) { await talk(["You scratch behind its ear. It settles back down by the can and watches you go."]); return; }
+  const name = await askName();
+  await fade(true);
+  S.stray = false; S.map = 'home'; S.x = 8 * T + 8; S.y = 9 * T + 12; S.dir = 'right';
+  kit.on = true; kit.x = kit.tx = 9 * T + 10; kit.y = kit.ty = 9 * T + 12; kit.dir = 'right'; kit.move = kit.sleep = false; kit.t = 99;
+  NPCS.find(n => n.id === 'mom').dir = 'left';
+  await fade(false); await wait(350);
+  momHop = animT; await wait(800);
+  await talk([
+    { n: 'Mom', t: "AAAH! What is that?! Is that a RAT?!" },
+    { n: 'Alex', t: "It's a kitten, Mom. I found it out by the can. This is " + name + "." },
+    { n: 'Mom', t: "You NAMED it?! No. No no no. Not on my clean floor!" },
+    { n: 'Alex', t: "It was all alone out there." },
+    "Mom stares at the kitten. The kitten stares back. Mew.",
+    { n: 'Mom', t: "One condition. This is YOUR cat. You feed it every morning and every night, and you keep its water full. I am not doing it for you." },
+    { n: 'Alex', t: "Deal." },
+  ]);
+  await fade(true);
+  S.kitten = { name, am: S.time >= 720, pm: false, water: false, fr: 20, since: S.day };
+  applyPets();
+  await fade(false);
+  await talk(["You set up a corner by the couch. An old box, a towel, and two bowls.", "Feed " + name + " before noon and again after 6, and fill the water bowl once a day."]);
+  await onEnterHome();
+}
+
 async function onEnterHome() {
   if (S.late && !S.caught) {
     S.caught = true; setGrounded();
@@ -1216,6 +1362,15 @@ async function endDay(passed) {
   if (S.groundedToday && S.groundType === 'both' && !(S.chores.trash && S.chores.dishes)) { S.groundPending = true; notes.push('You skipped chores while grounded. Grounded another day.'); }
   if (S.caught) notes.push('Missed curfew. Grounded tomorrow.');
   if (S.carrying) { S.carrying = false; notes.push('The trash bag never made it to the cans.'); }
+  if (S.kitten) {
+    const k = S.kitten, miss = [];
+    if (!k.am && k.since !== S.day) miss.push('breakfast');
+    if (!k.pm && k.since !== S.day) miss.push('dinner');
+    if (!k.water && k.since !== S.day) miss.push('water');
+    if (miss.length) { k.fr = Math.max(0, k.fr - 8 * miss.length); notes.push(k.name + ' went without ' + listJoin(miss) + '.'); }
+    else if (k.am && k.pm && k.water) k.fr = Math.min(100, k.fr + 6);
+    Object.assign(k, { am: false, pm: false, water: false });
+  }
   const sm = { day: S.day, bed: fmtTime(bt), q, energy: Math.round(S.max * q / 100), earned: S.earned, notes };
   S.day++; S.energy = sm.energy; S.time = 390; S.map = 'home'; S.x = 3 * T + 8; S.y = 3 * T + 12; S.dir = 'down';
   Object.assign(S, { talked: {}, jobs: {}, invited: {}, attended: false, ate: false, chores: { trash: false, dishes: false }, late: false, caught: false, gamesLate: false, freeSlice: false, earned: 0 });
@@ -1224,6 +1379,7 @@ async function endDay(passed) {
   await showSummary(sm);
   await fade(false); ending = false;
   toast(dateStr());
+  if (S.kitten) toast(S.kitten.name + ' is hungry.');
   if (S.groundedToday) await talk([{ n: 'Mom', t: S.groundType === 'both' ? "You're grounded today. Home by 8, and the dishes and trash are yours." : "You're grounded today. Home by 8 PM, no excuses." }]);
 }
 
@@ -1261,9 +1417,10 @@ function buildJr() {
   t += chip(S.chores.trash, 'Trash');
   t += chip(S.ate, 'Dinner', S.time >= 1050 && S.time <= 1230);
   if (S.ate || S.groundedToday) t += chip(S.chores.dishes, 'Dishes');
+  if (S.kitten) t += chip(S.kitten.am, 'Feed AM', S.time < 720) + chip(S.kitten.pm, 'Feed PM', S.time >= 1080) + chip(S.kitten.water, 'Water', true);
   $('pmToday').innerHTML = t;
-  const hh = id => { const n = hearts(id); let s = '<span class="hearts" aria-label="' + n + ' of 5 hearts">'; for (let i = 0; i < 5; i++) s += '<i class="' + (i < n ? 'on' : '') + '"></i>'; return s + '</span>'; };
-  $('pmFriends').innerHTML = '<div class="frow"><span>John</span>' + hh('john') + '</div><div class="frow"><span>Mrs. Russo</span>' + hh('russo') + '</div>';
+  const hh = n => { let s = '<span class="hearts" aria-label="' + n + ' of 5 hearts">'; for (let i = 0; i < 5; i++) s += '<i class="' + (i < n ? 'on' : '') + '"></i>'; return s + '</span>'; };
+  $('pmFriends').innerHTML = '<div class="frow"><span>John</span>' + hh(hearts('john')) + '</div><div class="frow"><span>Mrs. Russo</span>' + hh(hearts('russo')) + '</div>' + (S.kitten ? '<div class="frow"><span>' + S.kitten.name + '</span>' + hh(Math.floor(S.kitten.fr / 20)) + '</div>' : '');
   const slot = (has, ico, name, perk) => '<div class="slot' + (has ? '' : ' empty') + '">' + icon(has ? ico : 'lock') + '<b>' + name + '</b><span>' + perk + '</span></div>';
   $('pmGear').innerHTML = slot(S.sneakers, 'shoe', S.sneakers ? 'RUNNERS' : 'SNEAKERS', S.sneakers ? '+1 speed' : '$45 shop') +
     slot(S.tutor, 'book', S.tutor ? 'MS. LIN' : 'TUTOR', S.tutor ? 'Easier homework' : '$80 at school') +
@@ -1344,6 +1501,7 @@ const keys = {};
 const KMAP = { arrowup: 'up', w: 'up', arrowdown: 'down', s: 'down', arrowleft: 'left', a: 'left', arrowright: 'right', d: 'right' };
 function inp(d) { for (const k in KMAP) if (KMAP[k] === d && keys[k]) return true; return false; }
 window.addEventListener('keydown', e => {
+  if (e.target.tagName === 'INPUT') return;
   const k = e.key.toLowerCase();
   if (k in KMAP || k === ' ' || k === 'tab') e.preventDefault();
   keys[k] = true; if (e.repeat) return; press(k);
@@ -1412,6 +1570,7 @@ for (const ev of ['gesturestart', 'gesturechange', 'gestureend']) document.addEv
 document.addEventListener('touchmove', e => { if (e.touches.length > 1 || (e.scale && e.scale !== 1)) e.preventDefault(); }, { passive: false });
 let lastTouchEnd = 0;
 document.addEventListener('touchend', e => {
+  if (e.target.tagName === 'INPUT') return;
   const now = Date.now();
   if (now - lastTouchEnd < 350) { e.preventDefault(); if (e.target.click) e.target.click(); }
   lastTouchEnd = now;
@@ -1462,7 +1621,8 @@ function getTarget() {
     if (n.reach && S.dir === 'up' && ty === n.ty + 1 && Math.abs(tx - n.tx) <= 1) return { npc: n, x: n.tx * T + 8, y: n.ty * T - 2 };
   }
   const id = m.objs[tx + ',' + ty];
-  if (id) return { obj: id, x: tx * T + 8, y: ty * T - 2 };
+  if (kit.on && S.map === 'home' && id !== 'kfood' && id !== 'kwater' && Math.floor(kit.x / T) === tx && Math.floor((kit.y - 4) / T) === ty) return { obj: 'kitten', x: kit.x, y: kit.y - 12 };
+  if (id && (id !== 'stray' || S.stray)) return { obj: id, x: tx * T + 8, y: ty * T - 2 };
   return null;
 }
 function interact() {
@@ -1512,7 +1672,7 @@ function drawTrain(tr, cx, cy) {
 }
 
 /* ---------- render ---------- */
-let animT = 0, clockAcc = 0, moving = false, shake = 0;
+let animT = 0, clockAcc = 0, moving = false, shake = 0, camY = 0;
 function nightLevel(t) {
   if (t < 390) return 0.55;
   if (t < 450) return 0.45 * (450 - t) / 60;
@@ -1526,6 +1686,22 @@ function hole(x, y, r, a) {
   const g = lctx.createRadialGradient(x, y, 0, x, y, r);
   g.addColorStop(0, 'rgba(0,0,0,' + a + ')'); g.addColorStop(1, 'rgba(0,0,0,0)');
   lctx.fillStyle = g; lctx.fillRect(x - r, y - r, r * 2, r * 2);
+}
+function drawKit(frame, x, y) {
+  x = Math.round(x); y = Math.round(y);
+  ctx.fillStyle = 'rgba(0,0,0,.25)'; ctx.fillRect(x - 5, y - 1, 10, 2);
+  ctx.drawImage(frame, x - 8, y - frame.height);
+}
+function drawPetCorner(cx, cy) {
+  const k = S.kitten, bx = 5 * T - cx, fx = 6 * T - cx, wx = 7 * T - cx, y = 8 * T - cy;
+  ctx.fillStyle = '#8a6a4a'; ctx.fillRect(bx + 1, y + 4, 14, 11);
+  ctx.fillStyle = '#6e5238'; ctx.fillRect(bx + 1, y + 13, 14, 2);
+  ctx.fillStyle = '#c8423b'; ctx.fillRect(bx + 3, y + 6, 10, 6);
+  ctx.fillStyle = '#e2685f'; ctx.fillRect(bx + 3, y + 6, 10, 2);
+  for (const [px, col] of [[fx, '#c8423b'], [wx, '#2f6fb0']]) { ctx.fillStyle = col; ctx.fillRect(px + 3, y + 9, 10, 5); ctx.fillStyle = shade(col, 0.3); ctx.fillRect(px + 2, y + 8, 12, 2); }
+  ctx.fillStyle = '#3a2418'; ctx.fillRect(fx + 4, y + 9, 8, 1);
+  if (S.time < 720 ? k.am : k.pm) { ctx.fillStyle = '#b8641f'; ctx.fillRect(fx + 4, y + 8, 8, 2); ctx.fillStyle = '#7a4a22'; ctx.fillRect(fx + 5, y + 8, 1, 1); ctx.fillRect(fx + 8, y + 9, 1, 1); ctx.fillRect(fx + 10, y + 8, 1, 1); }
+  ctx.fillStyle = k.water ? '#9ec4e0' : '#3a2418'; ctx.fillRect(wx + 4, y + 9, 8, 1);
 }
 let bagLift = -9, bagToss = null;
 function drawBag(x, y) {
@@ -1547,13 +1723,19 @@ function render() {
   const W = m.w * T, H = m.h * T;
   let cx = W <= VW ? (W - VW) / 2 : clamp(fx - VW / 2, 0, W - VW);
   let cy = H <= VH ? (H - VH) / 2 : clamp(fy - VH / 2 - 8, 0, H - VH);
-  cx = Math.round(cx); cy = Math.round(cy);
+  cx = Math.round(cx); cy = Math.round(cy); camY = cy;
   if (shake > 0) cy += (Math.floor(animT * 30) % 2) ? 1 : 0;
   ctx.fillStyle = '#0f0d22'; ctx.fillRect(0, 0, VW, VH);
   ctx.drawImage(m.base, -cx, -cy);
 
+  if (!title && mapId === 'home' && S.kitten) drawPetCorner(cx, cy);
   const ents = [];
-  for (const n of npcsHere(mapId, time)) ents.push({ y: n.ty * T + 12, d: () => drawChar(NPC_FR[n.id], n.dir, 0, n.tx * T + 8 - cx, n.ty * T + 12 - cy) });
+  for (const n of npcsHere(mapId, time)) {
+    const hop = n.id === 'mom' && animT - momHop < 0.7 ? -Math.round(Math.abs(Math.sin((animT - momHop) * 13)) * 7) : 0;
+    ents.push({ y: n.ty * T + 12, d: () => drawChar(NPC_FR[n.id], n.dir, 0, n.tx * T + 8 - cx, n.ty * T + 12 - cy, hop) });
+  }
+  if (!title && mapId === 'out' && S.stray) ents.push({ y: 26 * T + 12, d: () => drawKit(KIT.sit, 12 * T + 8 - cx, 26 * T + 12 - cy) });
+  if (!title && mapId === 'home' && kit.on) ents.push({ y: kit.y, d: () => drawKit(kit.sleep ? KIT.sleep : kit.move ? KIT[kit.dir][Math.floor(animT * 6) % 2] : KIT.sit, kit.x - cx, kit.y - cy) });
   if (!title) {
     const f = moving ? [1, 0, 2, 0][Math.floor(animT * 8) % 4] : 0;
     ents.push({
@@ -1629,6 +1811,7 @@ function update(dt) {
     tryMove(dx * sp, 0); tryMove(0, dy * sp);
     checkWarp();
   }
+  updateKit(dt);
   for (const n of npcsHere(S.map, S.time)) { n.t -= dt; if (n.t <= 0) { n.t = 3 + Math.random() * 4; n.dir = Math.random() < 0.6 ? n.base : rnd(['down', 'left', 'right']); } }
   advanceClock(dt);
   if (S.map === 'out') {
@@ -1662,8 +1845,8 @@ async function startPlay(intro) {
     save();
   } else toast(dateStr());
 }
-$('bNew').addEventListener('click', () => { S = fresh(); FR = {}; startPlay(true); });
-$('bCont').addEventListener('click', () => { const d = loadSave(); if (!d) return; S = Object.assign(fresh(), d); FR = {}; startPlay(false); });
+$('bNew').addEventListener('click', () => { S = fresh(); FR = {}; applyPets(); startPlay(true); });
+$('bCont').addEventListener('click', () => { const d = loadSave(); if (!d) return; S = Object.assign(fresh(), d); FR = {}; applyPets(); startPlay(false); });
 if (isTouch) $('tKeys').textContent = 'Drag the stick to move · A to talk · B for menu';
 
 /* ---------- boot ---------- */
@@ -1671,6 +1854,7 @@ function build() {
   if (maps.out) return;
   for (const n of NPCS) NPC_FR[n.id] = buildFrames(PALS[n.id], n.id === 'john' ? JOHN_OV : null);
   maps.out = buildOutside(); maps.home = buildHome(); maps.pizza = buildPizza();
+  buildKit();
   toTitle();
   if (!standalone && (isIOS || isAndroid)) showInstall(isIOS ? 'ios' : 'android');
 }
