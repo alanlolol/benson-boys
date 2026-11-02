@@ -7,7 +7,7 @@ A cozy 8-bit life game set in Bensonhurst, Brooklyn. You play as Alex, one of th
 Open `index.html` in any browser, or play the hosted version once GitHub Pages is on.
 
 - **Computer.** Arrow keys or WASD to move, E or Space to talk or use, Q for the journal.
-- **Phone.** On-screen pad to move, A to talk or use, B for the journal.
+- **Phone.** Add it to your home screen, then drag the stick to move, A to talk or use, B for the menu.
 
 The game saves each night when you go to bed, in the browser you play in.
 

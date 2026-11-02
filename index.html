@@ -69,6 +69,10 @@ button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
 .overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:calc(env(safe-area-inset-top,0px) + 16px) max(16px,env(safe-area-inset-right,0px)) calc(env(safe-area-inset-bottom,0px) + 16px) max(16px,env(safe-area-inset-left,0px));box-sizing:border-box}
 #fade{position:absolute;inset:0;background:#000;opacity:0;pointer-events:none;transition:opacity .34s;z-index:50}
 #fade.on{opacity:1;pointer-events:auto}
+#fade{display:flex;align-items:center;justify-content:center}
+#fadeTxt{text-align:center;display:grid;gap:14px}
+#fadeTime{font-family:var(--px);font-size:22px;color:var(--cream);font-variant-numeric:tabular-nums}
+#fadeLbl{font-family:var(--vt);font-size:26px;color:var(--gold)}
 
 #title{z-index:55;background:linear-gradient(180deg,rgba(15,13,34,.15),rgba(15,13,34,.55))}
 .tcard{text-align:center;display:grid;gap:18px;justify-items:center}
@@ -89,6 +93,15 @@ button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
 #sStats dt{color:var(--muted)} #sStats dd{margin:0;font-variant-numeric:tabular-nums}
 #sNotes{margin:0;padding-left:20px;font-family:var(--vt);font-size:22px;line-height:1.15;color:#ffc2b8;display:grid;gap:4px}
 
+#help{z-index:59;background:rgba(10,8,25,.72)}
+.hcard{width:min(520px,100%);gap:12px}
+#helpList{margin:0;display:grid;gap:9px}
+#helpList div{display:grid;grid-template-columns:62px minmax(0,1fr);gap:8px;align-items:baseline}
+#helpList dt{font-family:var(--px);font-size:8px;color:var(--gold)}
+#helpList dd{margin:0;font-family:var(--vt);font-size:21px;line-height:1.02}
+#helpFirst{color:var(--mint)}
+#helpOk{position:sticky;bottom:0}
+@media (max-height:480px){.hcard{width:min(780px,100%);padding:14px 18px;gap:8px}#helpList{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px 18px}}
 #inst{z-index:70;background:rgba(15,13,34,.92)}
 .icard{max-height:100%;overflow:auto;touch-action:pan-y}
 .icard p{margin:0;font-family:var(--vt);font-size:23px;line-height:1.1}
@@ -201,6 +214,7 @@ button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
       <div class="tbtns">
         <button type="button" id="bNew">New Game</button>
         <button type="button" id="bCont" disabled>Continue</button>
+        <button type="button" id="bHelp">How to Play</button>
       </div>
       <p class="keys" id="tKeys">Arrows or WASD to move &middot; E to talk &middot; Q for menu</p>
     </div>
@@ -226,6 +240,7 @@ button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
       <div class="pm-foot">
         <span id="pmHint"></span>
         <div class="pm-btns">
+          <button type="button" class="sbtn" id="jHelp">How to play</button>
           <button type="button" class="sbtn" id="jReset">Start over</button>
           <span id="jConfirm" hidden>Erase your save? <button type="button" class="sbtn" id="jYes">Yes, erase</button> <button type="button" class="sbtn" id="jNo">Keep it</button></span>
           <button type="button" class="sbtn" id="jClose">Resume</button>
@@ -243,6 +258,15 @@ button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
     </div>
   </div>
 
+  <div id="help" class="overlay" hidden>
+    <div class="scard hcard icard box" role="dialog" aria-label="How to play">
+      <h2>HOW TO PLAY</h2>
+      <dl id="helpList"></dl>
+      <p id="helpFirst">First day? The door out is at the bottom of the room. The high school is up the block.</p>
+      <button type="button" class="pbtn" id="helpOk">Got it</button>
+    </div>
+  </div>
+
   <div id="inst" class="overlay" hidden>
     <div class="scard icard box" role="dialog" aria-label="Add to home screen">
       <h2>ONE QUICK STEP</h2>
@@ -254,7 +278,7 @@ button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
     </div>
   </div>
 
-  <div id="fade"></div>
+  <div id="fade"><div id="fadeTxt" hidden><div id="fadeTime"></div><div id="fadeLbl"></div></div></div>
 </div>
 
 <script>
@@ -901,6 +925,26 @@ dlg.addEventListener('click', () => { if (DL.opts && DL.done && DL.i === DL.line
 const fadeEl = $('fade');
 let fading = false;
 function fade(on) { fading = true; return new Promise(r => { fadeEl.classList.toggle('on', on); setTimeout(() => { if (!on) fading = false; r(); }, 360); }); }
+/* Time-passing screen: runs on the black fade, the clock rolls from one time to the next under a short label */
+const reduceMotion = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+function rollClock(from, to, label) {
+  const tEl = $('fadeTime'), box = $('fadeTxt'), ms = reduceMotion ? 0 : 1000, t0 = performance.now();
+  $('fadeLbl').textContent = label; tEl.textContent = fmtTime(from); box.hidden = false;
+  return new Promise(res => {
+    const tick = now => {
+      const p = ms ? clamp((now - t0) / ms, 0, 1) : 1;
+      tEl.textContent = fmtTime(from + (to - from) * p);
+      if (p < 1) requestAnimationFrame(tick); else setTimeout(() => { box.hidden = true; res(); }, reduceMotion ? 800 : 250);
+    };
+    requestAnimationFrame(tick);
+  });
+}
+async function passFx(min, label) {
+  await fade(true);
+  await rollClock(S.time, S.time + min, label);
+  pass(min); updateHud();
+  await fade(false);
+}
 
 /* ---------- game helpers ---------- */
 let mode = 'loading', busy = false, ending = false, jrOpen = false, sumOpen = false, sumRes = null;
@@ -932,13 +976,13 @@ function checkClock() {
 /* ---------- dialog content ---------- */
 const INV = {
   john: [
-    { min: 1, t: "Delivery truck just pulled up and my back is killing me. Help me unload? Ten bucks.", acc: async () => { if (!spend(15)) return; pass(30); earn(10); addFr('john', 8); await talk([{ n: 'John', t: "You're a lifesaver, kid. Here's ten. Don't spend it all in one place. Spend it here." }]); } },
-    { min: 1, t: "I'm testing a new pie. Vodka sauce, hot honey, the works. Wanna be my taste tester?", acc: async () => { pass(30); gain(15); addFr('john', 10); await talk([{ n: 'John', t: "Well? Be honest. Actually, don't. Just tell me it's great." }, { n: 'Alex', t: "It's actually really great." }, { n: 'John', t: "I KNEW it!" }]); } },
+    { min: 1, t: "Delivery truck just pulled up and my back is killing me. Help me unload? Ten bucks.", acc: async () => { if (!spend(15)) return; await passFx(30, 'Unloading the truck'); earn(10); addFr('john', 8); await talk([{ n: 'John', t: "You're a lifesaver, kid. Here's ten. Don't spend it all in one place. Spend it here." }]); } },
+    { min: 1, t: "I'm testing a new pie. Vodka sauce, hot honey, the works. Wanna be my taste tester?", acc: async () => { await passFx(30, 'Taste testing'); gain(15); addFr('john', 10); await talk([{ n: 'John', t: "Well? Be honest. Actually, don't. Just tell me it's great." }, { n: 'Alex', t: "It's actually really great." }, { n: 'John', t: "I KNEW it!" }]); } },
     { min: 2, t: "The Feast of Santa Rosalia is coming up. I'm running the zeppole booth this year. You'll come help, right?", acc: async () => { addFr('john', 12); await talk([{ n: 'John', t: "That's my guy! I'm holding you to it." }, "John will remember that."]); } },
   ],
   russo: [
-    { min: 1, t: "Come inside a minute, I just made biscotti. You're too skinny.", acc: async () => { pass(45); gain(20); addFr('russo', 10); await talk(["Her kitchen smells like anise and coffee. The plastic is still on the couch.", { n: 'Mrs. Russo', t: "Take some for your mother. Take some for you. Take the whole tin." }]); } },
-    { min: 1, t: "My grandson set up my new phone and now it won't stop beeping. Can you take a look?", acc: async () => { if (!spend(5)) return; pass(30); addFr('russo', 12); const tip = Math.random() < 0.5; await talk(["Forty-seven notifications from a word game. You turn them off.", { n: 'Mrs. Russo', t: tip ? "A genius! Here, five dollars. Don't argue with me." : "A genius! Your mother raised you right." }]); if (tip) earn(5); } },
+    { min: 1, t: "Come inside a minute, I just made biscotti. You're too skinny.", acc: async () => { await passFx(45, "At Mrs. Russo's"); gain(20); addFr('russo', 10); await talk(["Her kitchen smells like anise and coffee. The plastic is still on the couch.", { n: 'Mrs. Russo', t: "Take some for your mother. Take some for you. Take the whole tin." }]); } },
+    { min: 1, t: "My grandson set up my new phone and now it won't stop beeping. Can you take a look?", acc: async () => { if (!spend(5)) return; await passFx(30, 'Fixing the phone'); addFr('russo', 12); const tip = Math.random() < 0.5; await talk(["Forty-seven notifications from a word game. You turn them off.", { n: 'Mrs. Russo', t: tip ? "A genius! Here, five dollars. Don't argue with me." : "A genius! Your mother raised you right." }]); if (tip) earn(5); } },
     { min: 2, t: "Sunday I'm making a big dinner. Lasagna, meatballs, everything. You'll come by?", acc: async () => { addFr('russo', 12); await talk([{ n: 'Mrs. Russo', t: "Good. Bring an appetite. And a nice shirt." }, "Mrs. Russo will remember that."]); } },
   ],
 };
@@ -991,7 +1035,7 @@ async function talkRusso() {
     const c = await talk([{ n: N, t: "My shopping bags are down at the corner. Help an old lady carry them? I'll give you five dollars." }], ['Sure, Mrs. Russo', 'Not right now']);
     if (c === 0) {
       if (!spend(15)) return;
-      S.jobs.groceries = true; pass(30); earn(5); addFr('russo', 5);
+      S.jobs.groceries = true; await passFx(30, 'Carrying groceries'); earn(5); addFr('russo', 5);
       await talk(["Two bags of groceries, a gallon of milk, and somehow a whole wheel of cheese.", { n: N, t: "God bless you. Here, five dollars. Don't spend it all on pizza." }]);
     } else await talk([{ n: N, t: "Okay, okay. My arms are fine. Don't worry about me." }]);
   } else {
@@ -1024,14 +1068,14 @@ const ACT = {
     const cost = S.tutor ? 10 : 25;
     const c = await talk(["Do your homework? It takes about an hour and " + cost + " energy."], ['Do it', 'Later']);
     if (c !== 0 || !spend(cost)) return;
-    pass(60); S.hw = false; S.grades = Math.min(100, S.grades + 2);
+    await passFx(60, 'Doing homework'); S.hw = false; S.grades = Math.min(100, S.grades + 2);
     await talk([S.tutor ? "Thanks to Ms. Lin, the algebra actually makes sense. Done in no time." : "Algebra, a history worksheet, and a reading log. Done. Your brain hurts."]);
     toast('Homework done. Grades up');
   },
   async console() {
     if (S.groundedToday) { await talk(["The controller is gone. Mom took it. You're grounded."]); return; }
     const c = await talk(["Play video games for an hour?"], ['Play', 'Not now']); if (c !== 0) return;
-    pass(60); gain(5); if (S.time >= 1320) S.gamesLate = true;
+    await passFx(60, 'Playing video games'); gain(5); if (S.time >= 1320) S.gamesLate = true;
     await talk([S.time >= 1320 ? "One more game turned into four. Your eyes feel wired. That'll hurt your sleep." : "You run a few online matches. Relaxing."]);
   },
   async table() {
@@ -1040,8 +1084,10 @@ const ACT = {
     if (t < 1050) { await talk(["The table's set for later. Dinner's at 6."]); return; }
     if (t > 1230) { await talk(["Dinner's been put away. Check the fridge for leftovers."]); return; }
     const dish = wdi() === 6 ? "Sunday gravy with meatballs and braciole" : rnd(["chicken cutlets and salad", "baked ziti", "pastina with butter and cheese", "eggplant parm", "lentil soup with semolina bread", "sausage and peppers"]);
-    S.ate = true; pass(30); gain(25);
-    await talk([{ n: 'Mom', t: "Sit, sit. I made " + dish + "." }, "You eat until you can't move. The dishes are piling up in the sink."]);
+    S.ate = true;
+    await talk([{ n: 'Mom', t: "Sit, sit. I made " + dish + "." }]);
+    await passFx(30, 'Dinner with Mom'); gain(25);
+    await talk(["You eat until you can't move. The dishes are piling up in the sink."]);
   },
   async fridge() {
     if (!S.ate && S.time > 1230) { S.ate = true; gain(15); pass(15); await talk(["Cold leftovers, straight from the container. Honestly, still good."]); }
@@ -1077,7 +1123,7 @@ const ACT = {
     if (schoolDay() && S.time >= 480 && S.time < 900 && !S.attended) { await talk([{ n: 'John', t: "Not during school hours, kid. Your mother would kill me." }]); return; }
     const c = await talk(["Sweep up Valentino's for John? About an hour and 20 energy."], ['Grab the broom', 'Not now']);
     if (c !== 0 || !spend(20)) return;
-    pass(60); S.jobs.sweep = true; earn(8); addFr('john', 5);
+    await passFx(60, 'Sweeping the floor'); S.jobs.sweep = true; earn(8); addFr('john', 5);
     await talk(["Flour, crust crumbs, a sugar packet, and a single quarter. You pocket the quarter.", { n: 'John', t: "Look at that floor! You could eat off it. Don't, though. Here's your eight bucks." }]);
   },
   async school() {
@@ -1093,6 +1139,7 @@ const ACT = {
     const lines = [];
     if (S.hw) { S.grades = Math.max(0, S.grades - 3); lines.push("You forgot to do your homework. Your teacher sighs very loudly."); }
     S.grades = Math.min(100, S.grades + (tardy ? 1 : 2));
+    await rollClock(t, 900, 'In class');
     S.energy = Math.max(0, S.energy - 20); S.attended = true; S.time = 900; S.hw = true;
     lines.push(rnd(["Six periods. Algebra almost put you to sleep, but lunch was chicken nuggets.", "Gym class was dodgeball. You survived. Barely.", "History was all about the Brooklyn Bridge. You've walked it twice.", "Someone pulled the fire alarm during fourth period. Best day ever."]));
     if (tardy) lines.push("You got a late pass from the dean. Not a great look.");
@@ -1235,6 +1282,35 @@ $('jReset').addEventListener('click', () => { $('jConfirm').hidden = false; $('j
 $('jNo').addEventListener('click', () => { $('jConfirm').hidden = true; $('jReset').hidden = false; });
 $('jYes').addEventListener('click', () => { clearSave(); closeJr(); toTitle(); });
 
+/* ---------- how to play ---------- */
+const HELP_KEY = 'bensonboys-help-seen';
+let helpOpen = false, helpRes = null;
+function helpSeen() { try { return !!localStorage.getItem(HELP_KEY); } catch (e) { return false; } }
+function showHelp() {
+  const rows = [
+    ['MOVE', isTouch ? 'Drag the stick on the left.' : 'Arrow keys or WASD.'],
+    ['USE', 'An arrow pops up over things you can use. ' + (isTouch ? 'Tap A.' : 'Press E.')],
+    ['MENU', (isTouch ? 'Tap B' : 'Press Q') + ' for chores, money, and grades.'],
+    ['TIME', 'The clock runs as you walk. School is at 8 AM.'],
+    ['ENERGY', 'Work uses it up. Food brings it back.'],
+    ['MONEY', 'John and Mrs. Russo pay for odd jobs.'],
+    ['CURFEW', 'Home by 10 PM or you get grounded.'],
+    ['SAVE', 'Sleep in your bed to save.'],
+  ];
+  $('helpList').innerHTML = rows.map(([k, v]) => '<div><dt>' + k + '</dt><dd>' + v + '</dd></div>').join('');
+  $('help').hidden = false; helpOpen = true;
+  return new Promise(res => { helpRes = res; setTimeout(() => $('helpOk').focus({ preventScroll: true }), 50); });
+}
+function closeHelp() {
+  if (!helpOpen) return;
+  helpOpen = false; $('help').hidden = true;
+  try { localStorage.setItem(HELP_KEY, '1'); } catch (e) { }
+  const r = helpRes; helpRes = null; if (r) r();
+}
+$('helpOk').addEventListener('click', closeHelp);
+$('jHelp').addEventListener('click', showHelp);
+$('bHelp').addEventListener('click', showHelp);
+
 /* ---------- HUD ---------- */
 const hud = $('hud'), ebar = $('ebar'), efill = $('efill'), enumEl = $('enum');
 const hDate = $('hDate'), hTime = $('hTime'), hMoney = $('hMoney'), hCurfew = $('hCurfew');
@@ -1264,6 +1340,7 @@ window.addEventListener('blur', () => { for (const k in keys) keys[k] = false; }
 function press(k) {
   const A = k === 'e' || k === ' ' || k === 'enter' || k === 'z';
   const B = k === 'q' || k === 'escape' || k === 'tab' || k === 'x';
+  if (helpOpen) { if (A || B) closeHelp(); return; }
   if (mode !== 'play') return;
   if (sumOpen) { if (A) sumDone(); return; }
   if (DL.open) {
@@ -1505,7 +1582,7 @@ function update(dt) {
   animT += dt; dlgUpdate(dt);
   if (mode === 'title') { updateTrains(dt); return; }
   if (mode !== 'play') return;
-  const paused = busy || DL.open || fading || ending || sumOpen;
+  const paused = busy || DL.open || fading || ending || sumOpen || helpOpen;
   moving = false; shake = 0;
   if (paused) return;
   if (jrOpen) {
@@ -1551,9 +1628,9 @@ async function startPlay(intro) {
   if (intro) {
     await act(async () => {
       await talk([{ n: 'Mom', t: "Alex! You up? First day of junior year. School starts at 8, don't be late!" }, { n: 'Alex', t: "Five more minutes..." }, { n: 'Mom', t: "NOW, Alex!" }]);
+      if (!helpSeen()) await showHelp();
     });
-    toast(isTouch ? 'Drag the stick to move. Tap A to talk or use things.' : 'Move with arrows or WASD. Press E to talk or use things.');
-    setTimeout(() => toast(isTouch ? 'Tap B or MENU to open the menu.' : 'Press Q to open the menu.'), 2800);
+    toast('School starts at 8. The door out is at the bottom of the room.');
     save();
   } else toast(dateStr());
 }
