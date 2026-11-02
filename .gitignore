@@ -9,3 +9,7 @@ secrets*
 
 # Mac clutter
 .DS_Store
+
+# Private notes stay on this Mac
+STATUS.md
+CLAUDE.md
