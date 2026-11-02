@@ -116,14 +116,15 @@ button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
 @media (max-width:560px){.pm{padding:10px;gap:8px}.pm-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}.pm-row{grid-template-columns:minmax(0,1fr)}.gear{grid-template-columns:repeat(4,minmax(0,1fr))}.slot{min-height:44px;padding:4px}.slot span{display:none}.slot b{font-size:7px}#pmTime{font-size:15px}.tile{padding:6px 8px}.tile .v{font-size:12px}.chip{font-size:18px}.pm-foot{font-size:17px}}
 .sbtn{font-family:var(--px);font-size:9px;background:var(--panel2);border:2px solid var(--line);padding:8px 10px;cursor:pointer;min-height:36px}
 
-#touch{position:absolute;left:0;right:0;bottom:0;height:170px;z-index:35;pointer-events:none}
-.dpad{position:absolute;left:calc(env(safe-area-inset-left,0px) + 18px);bottom:calc(env(safe-area-inset-bottom,0px) + 18px);width:138px;height:138px;pointer-events:auto}
-.dpad button{position:absolute;width:46px;height:46px;background:rgba(29,26,53,.85);border:3px solid var(--cream);font-family:var(--px);font-size:12px;touch-action:none}
-.dpad [data-d=up]{left:46px;top:0}.dpad [data-d=down]{left:46px;bottom:0}.dpad [data-d=left]{left:0;top:46px}.dpad [data-d=right]{right:0;top:46px}
+#touch{position:absolute;left:0;right:0;bottom:0;height:240px;z-index:35;pointer-events:none}
+#stick{position:absolute;left:0;bottom:0;width:58%;height:100%;pointer-events:auto;touch-action:none}
+#stickBase{position:absolute;left:calc(env(safe-area-inset-left,0px) + 22px);bottom:calc(env(safe-area-inset-bottom,0px) + 22px);width:124px;height:124px;box-sizing:border-box;border-radius:50%;background:rgba(29,26,53,.6);border:3px solid rgba(255,241,207,.8)}
+#stickKnob{position:absolute;left:50%;top:50%;width:58px;height:58px;margin:-29px 0 0 -29px;box-sizing:border-box;border-radius:50%;background:rgba(200,66,59,.9);border:3px solid var(--cream)}
+#stick.on #stickKnob{background:var(--gold)}
 .abtns{position:absolute;right:calc(env(safe-area-inset-right,0px) + 18px);bottom:calc(env(safe-area-inset-bottom,0px) + 28px);display:flex;gap:14px;align-items:flex-end;pointer-events:auto}
 .abtns button{width:62px;height:62px;border-radius:50%;background:rgba(200,66,59,.9);border:3px solid var(--cream);font-family:var(--px);font-size:14px;touch-action:none}
 .abtns #tB{width:50px;height:50px;background:rgba(44,39,84,.9);margin-bottom:24px}
-.dpad button.on,.abtns button.on{background:var(--gold);color:var(--ink)}
+.abtns button.on{background:var(--gold);color:var(--ink)}
 
 @keyframes blink{50%{opacity:.25}}
 @keyframes bob{50%{transform:translateY(3px)}}
@@ -161,12 +162,7 @@ button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
   </div>
 
   <div id="touch" hidden>
-    <div class="dpad">
-      <button type="button" data-d="up" aria-label="Move up">&#9650;</button>
-      <button type="button" data-d="left" aria-label="Move left">&#9664;</button>
-      <button type="button" data-d="right" aria-label="Move right">&#9654;</button>
-      <button type="button" data-d="down" aria-label="Move down">&#9660;</button>
-    </div>
+    <div id="stick" role="application" aria-label="Movement joystick"><div id="stickBase"><div id="stickKnob"></div></div></div>
     <div class="abtns">
       <button type="button" id="tB" aria-label="Menu or back">B</button>
       <button type="button" id="tA" aria-label="Talk or use">A</button>
@@ -1220,9 +1216,9 @@ function updateHud() {
 }
 
 /* ---------- input ---------- */
-const keys = {}; const touchDir = { up: false, down: false, left: false, right: false };
+const keys = {};
 const KMAP = { arrowup: 'up', w: 'up', arrowdown: 'down', s: 'down', arrowleft: 'left', a: 'left', arrowright: 'right', d: 'right' };
-function inp(d) { for (const k in KMAP) if (KMAP[k] === d && keys[k]) return true; return touchDir[d]; }
+function inp(d) { for (const k in KMAP) if (KMAP[k] === d && keys[k]) return true; return false; }
 window.addEventListener('keydown', e => {
   const k = e.key.toLowerCase();
   if (k in KMAP || k === ' ' || k === 'tab') e.preventDefault();
@@ -1246,12 +1242,39 @@ function press(k) {
   if (busy || fading || ending) return;
   if (A) interact(); else if (B) openJr();
 }
-document.querySelectorAll('.dpad button').forEach(b => {
-  const d = b.dataset.d;
-  const on = e => { e.preventDefault(); touchDir[d] = true; b.classList.add('on'); if (DL.open) dlgMove(d === 'up' ? -1 : d === 'down' ? 1 : 0); try { b.setPointerCapture(e.pointerId); } catch (_) { } };
-  const off = () => { touchDir[d] = false; b.classList.remove('on'); };
-  b.addEventListener('pointerdown', on); b.addEventListener('pointerup', off); b.addEventListener('pointercancel', off); b.addEventListener('lostpointercapture', off);
+/* Joystick: the base jumps to your thumb, trails it when you drag past the rim, and goes straight when you are close to an axis */
+const STICK_R = 46, stickEl = $('stick'), stickBase = $('stickBase'), stickKnob = $('stickKnob');
+const stick = { x: 0, y: 0, id: null, cx: 0, cy: 0, rx: 0, ry: 0, flick: false };
+function stickDraw(dx, dy) {
+  stickBase.style.transform = 'translate(' + (stick.cx - stick.rx) + 'px,' + (stick.cy - stick.ry) + 'px)';
+  stickKnob.style.transform = 'translate(' + dx + 'px,' + dy + 'px)';
+}
+function stickMove(px, py) {
+  let dx = px - stick.cx, dy = py - stick.cy, d = Math.hypot(dx, dy);
+  if (d > STICK_R) { const k = (d - STICK_R) / d; stick.cx += dx * k; stick.cy += dy * k; dx = px - stick.cx; dy = py - stick.cy; d = STICK_R; }
+  stickDraw(dx, dy);
+  const m = d / STICK_R;
+  if (m < 0.18) { stick.x = stick.y = 0; stick.flick = false; return; }
+  let ux = dx / d, uy = dy / d;
+  if (Math.abs(ux) < 0.3) { ux = 0; uy = Math.sign(uy); } else if (Math.abs(uy) < 0.3) { uy = 0; ux = Math.sign(ux); }
+  const pow = Math.min(1, 0.3 + m); stick.x = ux * pow; stick.y = uy * pow;
+  if (DL.open && !stick.flick && Math.abs(dy) > STICK_R * 0.6) { stick.flick = true; dlgMove(dy < 0 ? -1 : 1); }
+  else if (Math.abs(dy) < STICK_R * 0.3) stick.flick = false;
+}
+function stickEnd() {
+  stick.id = null; stick.x = stick.y = 0; stick.flick = false;
+  stickEl.classList.remove('on'); stickBase.style.transform = ''; stickKnob.style.transform = '';
+}
+stickEl.addEventListener('pointerdown', e => {
+  if (stick.id !== null) return;
+  e.preventDefault(); stick.id = e.pointerId; stickEl.classList.add('on');
+  const r = stickBase.getBoundingClientRect();
+  stick.rx = r.left + r.width / 2; stick.ry = r.top + r.height / 2; stick.cx = e.clientX; stick.cy = e.clientY;
+  try { stickEl.setPointerCapture(e.pointerId); } catch (_) { }
+  stickMove(e.clientX, e.clientY);
 });
+stickEl.addEventListener('pointermove', e => { if (e.pointerId === stick.id) stickMove(e.clientX, e.clientY); });
+for (const ev of ['pointerup', 'pointercancel', 'lostpointercapture']) stickEl.addEventListener(ev, e => { if (e.pointerId === stick.id) stickEnd(); });
 for (const [id, key] of [['tA', 'e'], ['tB', 'q']]) {
   const b = $(id);
   b.addEventListener('pointerdown', e => { e.preventDefault(); b.classList.add('on'); press(key); });
@@ -1428,6 +1451,8 @@ function update(dt) {
   if (dx || dy) {
     moving = true;
     if (dx && dy) { dx *= 0.7071; dy *= 0.7071; }
+  } else if (stick.x || stick.y) { moving = true; dx = stick.x; dy = stick.y; }
+  if (moving) {
     if (Math.abs(dx) > Math.abs(dy)) S.dir = dx > 0 ? 'right' : 'left'; else S.dir = dy > 0 ? 'down' : 'up';
     const sp = (S.sneakers ? 90 : 70) * (S.energy < 10 ? 0.75 : 1) * dt;
     tryMove(dx * sp, 0); tryMove(0, dy * sp);
@@ -1449,7 +1474,7 @@ function loop(now) {
 /* ---------- screens ---------- */
 const titleEl = $('title');
 function toTitle() {
-  mode = 'title'; titleEl.hidden = false; hud.hidden = true; ebar.hidden = true; $('touch').hidden = true; dlg.hidden = true;
+  mode = 'title'; titleEl.hidden = false; hud.hidden = true; ebar.hidden = true; $('touch').hidden = true; dlg.hidden = true; stickEnd();
   $('bCont').disabled = !loadSave();
   setTimeout(() => $('bNew').focus(), 50);
 }
@@ -1461,14 +1486,14 @@ async function startPlay(intro) {
     await act(async () => {
       await talk([{ n: 'Mom', t: "Alex! You up? First day of junior year. School starts at 8, don't be late!" }, { n: 'Alex', t: "Five more minutes..." }, { n: 'Mom', t: "NOW, Alex!" }]);
     });
-    toast(isTouch ? 'Use the pad to move. Tap A to talk or use things.' : 'Move with arrows or WASD. Press E to talk or use things.');
+    toast(isTouch ? 'Drag the stick to move. Tap A to talk or use things.' : 'Move with arrows or WASD. Press E to talk or use things.');
     setTimeout(() => toast(isTouch ? 'Tap B or MENU to open the menu.' : 'Press Q to open the menu.'), 2800);
     save();
   } else toast(dateStr());
 }
 $('bNew').addEventListener('click', () => { S = fresh(); FR = {}; startPlay(true); });
 $('bCont').addEventListener('click', () => { const d = loadSave(); if (!d) return; S = Object.assign(fresh(), d); FR = {}; startPlay(false); });
-if (isTouch) $('tKeys').textContent = 'Use the on-screen pad to move · A to talk · B for menu';
+if (isTouch) $('tKeys').textContent = 'Drag the stick to move · A to talk · B for menu';
 
 /* ---------- boot ---------- */
 function build() {
