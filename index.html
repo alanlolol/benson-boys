@@ -367,7 +367,7 @@ const NPC_FR = {};
 
 /* ---------- maps ---------- */
 function makeMap(id, w, h) {
-  return { id, w, h, tiles: new Array(w * h).fill('W'), solid: new Uint8Array(w * h), objs: {}, warps: {}, buildings: [], wins: [], lights: [], base: null, over: null, dark: 1 };
+  return { id, w, h, tiles: new Array(w * h).fill('W'), solid: new Uint8Array(w * h), walls: [], objs: {}, warps: {}, buildings: [], wins: [], lights: [], base: null, over: null, dark: 1 };
 }
 function setT(m, x, y, t) { if (x < 0 || y < 0 || x >= m.w || y >= m.h) return; m.tiles[y * m.w + x] = t; }
 function getT(m, x, y) { if (x < 0 || y < 0 || x >= m.w || y >= m.h) return null; return m.tiles[y * m.w + x]; }
@@ -542,7 +542,7 @@ function buildOutside() {
   for (let x = 17; x <= 33; x++) { setT(m, x, 11, 'F'); setT(m, x, 18, 'F'); }
   for (let y = 11; y <= 18; y++) { setT(m, 17, y, 'F'); setT(m, 33, y, 'F'); }
   setT(m, 25, 18, 'G');
-  for (let i = 0; i < m.tiles.length; i++) if (m.tiles[i] === 'H' || m.tiles[i] === 'F') m.solid[i] = 1;
+  m.walls = [[17 * T, 11 * T + 5, 17 * T, 6], [17 * T, 18 * T + 5, 8 * T, 6], [26 * T, 18 * T + 5, 8 * T, 6], [17 * T + 5, 11 * T + 5, 6, 7 * T + 6], [33 * T + 5, 11 * T + 5, 6, 7 * T + 6]];
 
   const shop = (o) => Object.assign({ y: 0, h: 5, wh: 2, kind: 'shop' }, o);
   [
@@ -604,8 +604,8 @@ function drawOutside(m, R) {
     } else if (t === 'T' || t === 'F' || t === 'G') {
       g.fillStyle = (Math.floor(x / 2) % 2) ? '#3f8a4a' : '#47965a'; g.fillRect(px, py, T, T);
     } else if (t === 'H') {
-      g.fillStyle = '#2f5a3a'; g.fillRect(px, py, T, T);
-      for (let i = 0; i < 10; i++) { g.fillStyle = R() < 0.5 ? '#3e7049' : '#264a30'; g.fillRect(px + Math.floor(R() * 14), py + Math.floor(R() * 14), 2, 2); }
+      g.fillStyle = '#3f8a4a'; g.fillRect(px, py, T, T);
+      for (let i = 0; i < 10; i++) { g.fillStyle = R() < 0.5 ? '#47965a' : '#357a40'; g.fillRect(px + Math.floor(R() * 14), py + Math.floor(R() * 14), 2, 2); }
     } else sidewalk(g, px, py, R);
   }
   g.fillStyle = '#c4bfcf';
@@ -1264,6 +1264,7 @@ const DIRV = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] };
 function blocked(x, y) {
   const m = maps[S.map];
   for (const [px, py] of [[x - 5, y - 5], [x + 4, y - 5], [x - 5, y - 1], [x + 4, y - 1]]) if (isSolid(m, Math.floor(px / T), Math.floor(py / T))) return true;
+  for (const [wx, wy, ww, wh] of m.walls) if (x + 5 > wx && x - 5 < wx + ww && y > wy && y - 5 < wy + wh) return true;
   for (const n of npcsHere(S.map, S.time)) { const nx = n.tx * T + 8, ny = n.ty * T + 12; if (Math.abs(x - nx) < 11 && y > ny - 7 && y - 6 < ny) return true; }
   return false;
 }
