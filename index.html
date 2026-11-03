@@ -158,7 +158,7 @@ button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
 .sbtn{font-family:var(--px);font-size:9px;background:var(--panel2);border:2px solid var(--line);padding:8px 10px;cursor:pointer;min-height:36px}
 
 #touch{position:absolute;left:0;right:0;bottom:0;height:240px;z-index:35;pointer-events:none}
-#stick{position:absolute;left:0;bottom:0;width:58%;height:100%;pointer-events:auto;touch-action:none}
+#stick{position:absolute;left:0;bottom:0;width:calc(env(safe-area-inset-left,0px) + 200px);height:calc(env(safe-area-inset-bottom,0px) + 200px);pointer-events:auto;touch-action:none}
 #stickBase{position:absolute;left:calc(env(safe-area-inset-left,0px) + 22px);bottom:calc(env(safe-area-inset-bottom,0px) + 22px);width:124px;height:124px;box-sizing:border-box;border-radius:50%;background:rgba(29,26,53,.6);border:3px solid rgba(255,241,207,.8)}
 #stickKnob{position:absolute;left:50%;top:50%;width:58px;height:58px;margin:-29px 0 0 -29px;box-sizing:border-box;border-radius:50%;background:rgba(200,66,59,.9);border:3px solid var(--cream)}
 #stick.on #stickKnob{background:var(--gold)}
@@ -1525,17 +1525,13 @@ function press(k) {
   if (busy || fading || ending) return;
   if (A) interact(); else if (B) openJr();
 }
-/* Joystick: the base jumps to your thumb, trails it when you drag past the rim, and goes straight when you are close to an axis */
+/* Joystick: the base stays put, the knob follows your thumb up to the rim, and it goes straight when you are close to an axis */
 const STICK_R = 46, stickEl = $('stick'), stickBase = $('stickBase'), stickKnob = $('stickKnob');
-const stick = { x: 0, y: 0, id: null, cx: 0, cy: 0, rx: 0, ry: 0, flick: false };
-function stickDraw(dx, dy) {
-  stickBase.style.transform = 'translate(' + (stick.cx - stick.rx) + 'px,' + (stick.cy - stick.ry) + 'px)';
-  stickKnob.style.transform = 'translate(' + dx + 'px,' + dy + 'px)';
-}
+const stick = { x: 0, y: 0, id: null, cx: 0, cy: 0, flick: false };
 function stickMove(px, py) {
   let dx = px - stick.cx, dy = py - stick.cy, d = Math.hypot(dx, dy);
-  if (d > STICK_R) { const k = (d - STICK_R) / d; stick.cx += dx * k; stick.cy += dy * k; dx = px - stick.cx; dy = py - stick.cy; d = STICK_R; }
-  stickDraw(dx, dy);
+  if (d > STICK_R) { dx *= STICK_R / d; dy *= STICK_R / d; d = STICK_R; }
+  stickKnob.style.transform = 'translate(' + dx + 'px,' + dy + 'px)';
   const m = d / STICK_R;
   if (m < 0.18) { stick.x = stick.y = 0; stick.flick = false; return; }
   let ux = dx / d, uy = dy / d;
@@ -1546,13 +1542,13 @@ function stickMove(px, py) {
 }
 function stickEnd() {
   stick.id = null; stick.x = stick.y = 0; stick.flick = false;
-  stickEl.classList.remove('on'); stickBase.style.transform = ''; stickKnob.style.transform = '';
+  stickEl.classList.remove('on'); stickKnob.style.transform = '';
 }
 stickEl.addEventListener('pointerdown', e => {
   if (stick.id !== null) return;
   e.preventDefault(); stick.id = e.pointerId; stickEl.classList.add('on');
   const r = stickBase.getBoundingClientRect();
-  stick.rx = r.left + r.width / 2; stick.ry = r.top + r.height / 2; stick.cx = e.clientX; stick.cy = e.clientY;
+  stick.cx = r.left + r.width / 2; stick.cy = r.top + r.height / 2;
   try { stickEl.setPointerCapture(e.pointerId); } catch (_) { }
   stickMove(e.clientX, e.clientY);
 });
